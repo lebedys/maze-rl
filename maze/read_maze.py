@@ -15,13 +15,13 @@ time_list = [0, 1, 2]
 maze_cells = np.zeros((201, 201, 2), dtype=int)
 
 # load maze
-def load_maze():
-    if not os.path.exists("COMP6247Maze20212022.npy"):
-        raise ValueError("Cannot find %s" % file_path)
+def load_maze(maze_file_path='mazes/final.npy'):
+    if not os.path.exists(maze_file_path):
+        raise ValueError("Cannot find %s" % maze_file_path)
 
     else:
         global maze_cells
-        maze = np.load("COMP6247Maze20212022.npy", allow_pickle=False, fix_imports=True)
+        maze = np.load(maze_file_path, allow_pickle=False, fix_imports=True)
         maze_cells = np.zeros((maze.shape[0], maze.shape[1], 2), dtype=int)
         for i in range(maze.shape[0]):
             for j in range(maze.shape[1]):
