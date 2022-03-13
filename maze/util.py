@@ -2,7 +2,7 @@ def walls_to_text(walls, nrows=3, ncols=3, row=0, col=0):
     txt = ''
     for row in walls[row:row+nrows,col:col+ncols]:
         for cell in row:
-            mark = '-' if cell else 'x'
+            mark = '-' if cell == 1 else 'x'
             txt += mark + ' '
         txt += '\n'
 
