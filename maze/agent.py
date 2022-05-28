@@ -39,12 +39,12 @@ REWARDS = {
     'finish': 1.,  # finish maze (win condition)
 
     # obstacles:
-    'wall': -0.5,  # hit wall
+    'wall': -1.,  # hit wall
     'fire': -1.,   # hit fire
 
     # movement:
-    'step_taken': -0.03,  # take step in any direction
-    'stay': -0.04,        # stay in place
+    'step_taken': -0.01,  # take step in any direction
+    'stay': -0.3,        # stay in place
 
     # backtracking:
     'repeat_step': -0.1,  # reverse last action # todo - needs better name
@@ -64,8 +64,8 @@ class Agent:
                  max_steps: int = 10_000_000,   # maximum path length
                  Q: np.ndarray = None,          # Q-table
                  rewards: dict = REWARDS,       # rewards
-                 discount: float = 0.5,         # discount factor
-                 learning_rate: float = 0.5,
+                 discount: float = 0.9,         # discount factor
+                 learning_rate: float = 0.1,
                  # todo - change from euclidian to manhattan distance?
                  euclidian_cost_weighting: float = 0.05,  # todo - explore impact of this parameter
                  ):
@@ -81,7 +81,10 @@ class Agent:
 
         # initialize agent position:
         self.position = np.copy(self.start_position)  # initial position
+
+        # logging:
         self.step_count = 0
+        self.wall_hits = 0
 
         # todo - convert from tuple-indexed dict, to sequential row-col indexing
         self.visited = defaultdict(int)  # dictionary of visited nodes
@@ -164,6 +167,8 @@ class Agent:
         # penalize hitting obstacles:
         # next_cell = walls[next_row-row, next_col-col]
         if is_wall(next_cell):    # penalize wall hit
+            self.wall_hits += 1
+            print('hit wall at {},{}'.format(row, col))
             reward += self.rewards['wall']
             next_row, next_col = row, col  # revert position
         elif is_fire(next_cell):  # penalize fire hit
