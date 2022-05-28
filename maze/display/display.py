@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
+
 def plot_maze_walls(walls, show_values=False, ax=None, cmap=None) -> None:
     if ax is None:
-        ax = plt.gca() # get current axis
+        ax = plt.gca()  # get current axis
 
     # display walls
     if cmap is None:
@@ -17,23 +18,26 @@ def plot_maze_walls(walls, show_values=False, ax=None, cmap=None) -> None:
     # if show_values:
     for (row, col), value in np.ndenumerate(walls):
         if show_values:
-            ax.text(col, row, '{:1d}'.format(value), ha='center', va='center', bbox=dict(boxstyle='round', edgecolor='none', facecolor=wall_color))
+            ax.text(col, row, '{:1d}'.format(value), ha='center', va='center',
+                    bbox=dict(boxstyle='round', edgecolor='none', facecolor=wall_color))
+
 
 def plot_agent(position, ax=None):
     if ax is None:
-        ax = plt.gca() # get current axis
+        ax = plt.gca()  # get current axis
 
     agent = plt.Circle(position, 0.2, color='blue')
     ax.add_patch(agent)
 
-    range = plt.Rectangle((position[0]-1.5,position[1]-1.5), 3, 3, ec="blue", facecolor='none')
+    range = plt.Rectangle((position[0] - 1.5, position[1] - 1.5), 3, 3, ec="blue", facecolor='none')
     ax.add_patch(range)
 
     # todo - add t label option
 
+
 def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None):
     if ax is None:
-        ax = plt.gca() # get current axis
+        ax = plt.gca()  # get current axis
 
     # display walls
     if cmap is None:
@@ -52,18 +56,19 @@ def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None):
 
     ax.matshow(path_mat, cmap=cmap)
 
+
 def plot_fires(agent_position: tuple, agent_observation, ax=None):
     if ax is None:
-        ax = plt.gca() # get current axis
+        ax = plt.gca()  # get current axis
 
-    walls, fires = agent_observation[:,:,0], agent_observation[:,:,1]
+    walls, fires = agent_observation[:, :, 0], agent_observation[:, :, 1]
 
-     # if show_values:
+    # if show_values:
     for (row, col), value in np.ndenumerate(walls):
         fire_time = walls[row, col]
 
         if fire_time == 0 or (col, row) == agent_position:
-            pass # do nothing
+            pass  # do nothing
         else:
             if fire_time == 1:
                 fire_color = 'orange'
