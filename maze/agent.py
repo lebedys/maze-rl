@@ -36,21 +36,23 @@ N_ACTIONS = 5
 
 # default agent rewards:
 REWARDS = {
-    'finish': 1.,  # finishing maze
+    'finish': 1.,  # finish maze (win condition)
 
     # obstacles:
-    'wall': -0.1,  # hit wall
-    'fire': -1.,  # hit fire
+    'wall': -0.5,  # hit wall
+    'fire': -1.,   # hit fire
 
     # movement:
     'step_taken': -0.03,  # take step in any direction
-    'stay': -0.04,  # staying in place
+    'stay': -0.04,        # stay in place
 
-    # backtracking
-    'repeat_step': -0.1,  # take step backwards
-    'revisited': -0.05,  # todo - penalize return to visited position
+    # backtracking:
+    'repeat_step': -0.1,  # reverse last action # todo - needs better name
+    'revisited': -0.05,   # revisit previously-visited node
 
-    # todo - penalize path length?
+    # distance metrics:
+    'distance_to_end': -0.01,
+    'distance_from_start': 0.01
 }
 
 
@@ -64,6 +66,7 @@ class Agent:
                  rewards: dict = REWARDS,       # rewards
                  discount: float = 0.5,         # discount factor
                  learning_rate: float = 0.5,
+                 # todo - change from euclidian to manhattan distance?
                  euclidian_cost_weighting: float = 0.05,  # todo - explore impact of this parameter
                  ):
 
@@ -175,8 +178,10 @@ class Agent:
             # todo - proportional to number of visitations?
             reward += self.rewards['revisited'] * self.visited[(next_row, next_col)]
 
-        # todo - small negative reward for distance to goal
-        reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
+        distance_from_start = euclidian_cost(self.position, self.start_position)
+        reward += self.rewards['distance_from_start'] * distance_from_start
+        distance_to_end = euclidian_cost(self.position, self.end_position)
+        reward += self.rewards['distance_to_end'] * distance_to_end
 
         is_finished = False
         if self.is_finished():

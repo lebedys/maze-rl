@@ -44,6 +44,9 @@ if __name__ == '__main__':
 
     plt.show()
 
+    # todo - penalize path length at end of epoch
+    #      - use this to update policy (q-table) somehow
+
     run_path = a0.run(maze=maze_walls, max_steps=10_000)
 
     fig2, ax = plt.subplots()
