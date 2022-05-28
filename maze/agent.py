@@ -29,8 +29,8 @@ directions = np.array(
 
 # todo - move to config.py
 # world parameters:
-HEIGHT = 201
-WIDTH = 201
+HEIGHT = 11
+WIDTH = 11
 N_ACTIONS = 5
 
 # default agent rewards:
@@ -42,10 +42,13 @@ REWARDS = {
     'fire': -1.,  # hit fire
 
     # movement:
-    'step_taken': -0.,  # take step in any direction
+    'step_taken': -0.05,  # take step in any direction
     'stay': -0.,  # staying in place
-    'repeat_step': -0.05,  # take step backwards
+
+    # backtracking
+    'repeat_step': -0.1,  # take step backwards
     'visited': 0,  # todo - penalize return to visited position
+
     # todo - penalize path length?
 }
 
@@ -58,8 +61,8 @@ class Agent:
                  max_steps: int = 10_000_000,   # maximum path length
                  Q: np.ndarray = None,          # Q-table
                  rewards: dict = REWARDS,       # rewards
-                 discount: float = 0.1,         # discount factor
-                 learning_rate: float = 1,
+                 discount: float = 0.5,         # discount factor
+                 learning_rate: float = 0.5,
                  euclidian_cost_weighting: float = 0.0,  # todo - explore impact of this parameter
                  ):
 
@@ -85,6 +88,7 @@ class Agent:
 
     def reset_position(self) -> None:
         self.position = np.copy(self.start_position) # initial position
+        self.step_count = 0
 
     def is_finished(self) -> bool:
         is_finished = (self.position == self.end_position).all()
@@ -104,7 +108,7 @@ class Agent:
              train=False,        # enable training
              epsilon: float = 0.1,  # todo - exploration
              q_noise: float = 0.0,  # todo - random noise
-             ) -> None:  # random exploration probability
+             ) -> bool:  # random exploration probability
 
         # todo - epsilon for random choice selection
         # todo - add random noise to q values
@@ -116,8 +120,7 @@ class Agent:
         row, col = self.position
         q_values = self.Q[row, col, :]
 
-        # if np.random.random() < epsilon:  # random exploration
-        if False:
+        if np.random.random() < epsilon:  # random exploration
             chosen_q_index = np.random.randint(0, 5)
             # fixme - need q index chosen
         else:
@@ -171,16 +174,22 @@ class Agent:
         # todo - small negative reward for distance to goal
         # reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
 
-        # estimate of maximum future q-value:
-        max_q = self.Q[next_row, next_col, :].max()
+        is_finished = False
+        if self.is_finished():
+            reward += self.rewards['finish']
+            is_finished = True
 
-        self.Q[row, col, chosen_q_index] += \
-            self.learning_rate * (reward - chosen_q + self.discount * max_q)
+        if train:  # update q-table
+            max_q = self.Q[next_row, next_col, :].max()
+            self.Q[row, col, chosen_q_index] += \
+                self.learning_rate * (reward - chosen_q + self.discount * max_q)
 
         self.position = np.array([next_row, next_col])  # update position
         self.step_count += 1
 
         self.previous_position = np.copy(self.position)  # update memory of previous position
+
+        return is_finished
 
     def train(self,
               maze: np.ndarray,
@@ -198,15 +207,15 @@ class Agent:
             walls = observation
             fires = np.array([])
 
-            self.step(walls=walls, fires=fires, train=True)  # update position
+            is_finished = self.step(walls=walls, fires=fires, train=True)  # update position
             train_path[i+1, :] = np.copy(self.position)  # store new position
 
-            if self.is_finished():  # achieved goal?
+            if is_finished:  # achieved goal?
                 train_path = train_path[:i+2, :]  # truncate if path unfilled before returning
-                print('finished in {} steps!'.format(self.step_count))
+                print('finished training in {} steps!'.format(self.step_count))
                 break  # end training
 
-        print('training loop broken.')
+        print('training loop broken after {} steps.'.format(self.step_count))
 
         return train_path  # return path when finished
 
@@ -217,12 +226,18 @@ class Agent:
         run_path[0, :] = self.position  # add initial position
 
         for i in range(max_steps):
-            self.step(maze, train=False)
+            observation = self.observe(maze)  # get surrounding information
+            walls = observation
+            fires = np.array([])
 
-            run_path[i, :] = self.position  # append position
+            is_finished = self.step(walls=walls, fires=fires, train=False)  # update position
+            run_path[i+1, :] = np.copy(self.position)  # store new position
 
-            if self.is_finished():  # achieved goal?
-                run_path = run_path[:i+1, :]  # truncate path if unfilled before returning
-                break  # end run
+            if is_finished:  # achieved goal?
+                train_path = run_path[:i+2, :]  # truncate if path unfilled before returning
+                print('finished running in {} steps!'.format(self.step_count))
+                break  # end training
+
+        print('run loop broken after {} steps.'.format(self.step_count))
 
         return run_path  # return path when finished

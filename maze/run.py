@@ -43,3 +43,18 @@ if __name__ == '__main__':
                        )
 
     plt.show()
+
+    run_path = a0.run(maze=maze_walls, max_steps=1_000)
+
+    fig2, ax = plt.subplots()
+    dp.plot_maze_walls(maze_walls,
+                       ax=ax,
+                       cmap=ListedColormap([path_color, wall_color])
+                       )
+
+    dp.plot_agent_path(run_path, shape=maze_shape,
+                       ax=ax,
+                       cmap=ListedColormap(['none', 'blue'])
+                       )
+
+    plt.show()
