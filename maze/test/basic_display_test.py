@@ -1,15 +1,15 @@
-import display
+from maze.display import display
 import matplotlib.pyplot as plt
 import numpy as np
 
-import read_maze
+import maze.lib.read_maze as rm
 
 if __name__ == '__main__':
-    read_maze.load_maze('./mazes/final.npy')
-    walls = read_maze.maze_cells[:, :, 0]
+    rm.load_maze('./mazes/final.npy')
+    walls = rm.maze_cells[:, :, 0]
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    display.plot_maze_walls(1 - read_maze.maze_cells[:, :, 0], show_values=False, ax=ax)
+    display.plot_maze_walls(1 - rm.maze_cells[:, :, 0], show_values=False, ax=ax)
 
     # agent position:
     a0 = (199, 199)
