@@ -44,7 +44,7 @@ REWARDS = {
     # movement:
     'step_taken': -0.,  # take step in any direction
     'stay': -0.,  # staying in place
-    'return': -0.,  # take step backwards
+    'repeat_step': -0.05,  # take step backwards
     'visited': 0,  # todo - penalize return to visited position
     # todo - penalize path length?
 }
@@ -76,6 +76,8 @@ class Agent:
         self.position = np.copy(self.start_position)  # initial position
         self.step_count = 0
 
+        self.previous_position = np.array([0, 0])
+
         if self.Q is None:  # if no predefined Q-table provided
             self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 1. / N_ACTIONS)  # initialize default q values equal for all
             self.Q[1, 1, :] = np.random.rand(5)  # assign random q-values for start position
@@ -86,7 +88,6 @@ class Agent:
 
     def is_finished(self) -> bool:
         is_finished = (self.position == self.end_position).all()
-        if is_finished: print('finished!')
         return is_finished
 
     def observe(self, maze: np.ndarray) -> np.ndarray:
@@ -108,6 +109,8 @@ class Agent:
         # todo - epsilon for random choice selection
         # todo - add random noise to q values
         # todo - invalidate some directions
+
+        prev_row, prev_col = self.previous_position[0], self.previous_position[1]  # decompose previous position
 
         # get Q(s) vector:
         row, col = self.position
@@ -161,9 +164,9 @@ class Agent:
             reward += self.rewards['fire']
             next_row, next_col = row, col  # revert position
 
-        # previous_position = 0
-        # if (next_position == previous_position).all():
-        #     pass  # todo - check and penalize if returning to previous move
+        if self.step_count is not 0:  # ignore initial step
+            if next_row == prev_row and next_col == prev_col:
+                reward += self.rewards['repeat_step']  # penalize for repeating most recent step
 
         # todo - small negative reward for distance to goal
         # reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
@@ -175,6 +178,9 @@ class Agent:
             self.learning_rate * (reward - chosen_q + self.discount * max_q)
 
         self.position = np.array([next_row, next_col])  # update position
+        self.step_count += 1
+
+        self.previous_position = np.copy(self.position)  # update memory of previous position
 
     def train(self,
               maze: np.ndarray,
@@ -197,7 +203,10 @@ class Agent:
 
             if self.is_finished():  # achieved goal?
                 train_path = train_path[:i+2, :]  # truncate if path unfilled before returning
+                print('finished in {} steps!'.format(self.step_count))
                 break  # end training
+
+        print('training loop broken.')
 
         return train_path  # return path when finished
 

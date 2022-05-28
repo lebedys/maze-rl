@@ -9,28 +9,35 @@ import display.display as dp
 import numpy as np
 
 read_maze.load_maze('./mazes/final.npy')
-walls = read_maze.maze_cells[:, :, 0]
+walls_201 = read_maze.maze_cells[:, :, 0]
 
 walls_9 = maze.mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
+walls_11 = maze.mazes.sample_mazes.sample_maze_11_A
 
 wall_color = '#eeeeee'
 path_color = '#111111'
 
 if __name__ == '__main__':
 
+    maze_walls = walls_11
+    maze_shape = (11, 11)
+    end_position = (9, 9)
+
     a0 = agent.Agent(
-        end_position=(7, 7)
+        end_position=end_position
     )  # instantiate new agent
 
-    train_path = a0.train(maze=walls_9, max_steps=300)
+    train_path = a0.train(maze=maze_walls, max_steps=500)
+
+    print('exited training.')
 
     fig, ax = plt.subplots()
-    dp.plot_maze_walls(walls_9,
+    dp.plot_maze_walls(maze_walls,
                        ax=ax,
                        cmap=ListedColormap([path_color, wall_color])
                        )
 
-    dp.plot_agent_path(train_path, shape=(9, 9),
+    dp.plot_agent_path(train_path, shape=maze_shape,
                        ax=ax,
                        cmap=ListedColormap(['none', 'red'])
                        )
