@@ -64,7 +64,7 @@ class Agent:
                  rewards: dict = REWARDS,       # rewards
                  discount: float = 0.5,         # discount factor
                  learning_rate: float = 0.5,
-                 euclidian_cost_weighting: float = 0.0,  # todo - explore impact of this parameter
+                 euclidian_cost_weighting: float = 0.05,  # todo - explore impact of this parameter
                  ):
 
         self.start_position = np.array(list(start_position), dtype=int)
@@ -173,10 +173,10 @@ class Agent:
 
         if (next_row, next_col) in self.visited:
             # todo - proportional to number of visitations?
-            reward += self.rewards['revisited']
+            reward += self.rewards['revisited'] * self.visited[(next_row, next_col)]
 
         # todo - small negative reward for distance to goal
-        # reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
+        reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
 
         is_finished = False
         if self.is_finished():
@@ -240,7 +240,7 @@ class Agent:
             run_path[i+1, :] = np.copy(self.position)  # store new position
 
             if is_finished:  # achieved goal?
-                train_path = run_path[:i+2, :]  # truncate if path unfilled before returning
+                run_path = run_path[:i+2, :]  # truncate if path unfilled before returning
                 print('finished running in {} steps!'.format(self.step_count))
                 break  # end training
 

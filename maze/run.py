@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     plt.show()
 
-    run_path = a0.run(maze=maze_walls, max_steps=1_000)
+    run_path = a0.run(maze=maze_walls, max_steps=10_000)
 
     fig2, ax = plt.subplots()
     dp.plot_maze_walls(maze_walls,
