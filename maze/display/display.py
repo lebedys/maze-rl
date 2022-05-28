@@ -31,13 +31,26 @@ def plot_agent(position, ax=None):
 
     # todo - add t label option
 
-def plot_agent_path(path: np.ndarray, ax=None):
+def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None):
     if ax is None:
         ax = plt.gca() # get current axis
 
-    for position in path:
-        position_marker = plt.Circle(position, 1, color='red')
-        ax.add_patch(position_marker)
+    # display walls
+    if cmap is None:
+        none = 'none'
+        path_color = 'red'
+        cmap = ListedColormap([none, path_color])
+
+    # convert to mask matrix:
+    path_mat = np.zeros(shape=shape)
+
+    rows = path[:, 0].astype(int)
+    cols = path[:, 1].astype(int)
+    visited = np.ones_like(rows)
+
+    path_mat[rows, cols] = visited
+
+    ax.matshow(path_mat, cmap=cmap)
 
 def plot_fires(agent_position: tuple, agent_observation, ax=None):
     if ax is None:
