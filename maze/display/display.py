@@ -1,15 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
-def plot_maze_walls(walls, show_values=False, ax=None) -> None:
+def plot_maze_walls(walls, show_values=False, ax=None, cmap=None) -> None:
     if ax is None:
         ax = plt.gca() # get current axis
 
     # display walls
-    wall_color = '#eeeeee'
-    path_color = '#111111'
-    cmap = ListedColormap([wall_color, path_color])
+    if cmap is None:
+        wall_color = '#eeeeee'
+        path_color = '#111111'
+        cmap = ListedColormap([wall_color, path_color])
+
     ax.matshow(walls, cmap=cmap)
 
     # if show_values:
