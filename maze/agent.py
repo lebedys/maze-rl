@@ -3,11 +3,12 @@ import random
 import numpy as np
 import torch
 from typing import Tuple
+from collections import defaultdict
 
 from enum import Enum
 
 from maze.lib.util import is_fire, is_wall, euclidian_cost
-
+# todo - implement periodic logging
 
 # directionality:
 # [0, 1, 2
@@ -42,12 +43,12 @@ REWARDS = {
     'fire': -1.,  # hit fire
 
     # movement:
-    'step_taken': -0.05,  # take step in any direction
-    'stay': -0.,  # staying in place
+    'step_taken': -0.03,  # take step in any direction
+    'stay': -0.04,  # staying in place
 
     # backtracking
     'repeat_step': -0.1,  # take step backwards
-    'visited': 0,  # todo - penalize return to visited position
+    'revisited': -0.05,  # todo - penalize return to visited position
 
     # todo - penalize path length?
 }
@@ -79,6 +80,8 @@ class Agent:
         self.position = np.copy(self.start_position)  # initial position
         self.step_count = 0
 
+        # todo - convert from tuple-indexed dict, to sequential row-col indexing
+        self.visited = defaultdict(int)  # dictionary of visited nodes
         self.previous_position = np.array([0, 0])
 
         if self.Q is None:  # if no predefined Q-table provided
@@ -110,8 +113,6 @@ class Agent:
              q_noise: float = 0.0,  # todo - random noise
              ) -> bool:  # random exploration probability
 
-        # todo - epsilon for random choice selection
-        # todo - add random noise to q values
         # todo - invalidate some directions
 
         prev_row, prev_col = self.previous_position[0], self.previous_position[1]  # decompose previous position
@@ -122,7 +123,6 @@ class Agent:
 
         if np.random.random() < epsilon:  # random exploration
             chosen_q_index = np.random.randint(0, 5)
-            # fixme - need q index chosen
         else:
             # todo - random noise applied to q value vector
             # pick maximum q-value from Q(s):
@@ -171,6 +171,10 @@ class Agent:
             if next_row == prev_row and next_col == prev_col:
                 reward += self.rewards['repeat_step']  # penalize for repeating most recent step
 
+        if (next_row, next_col) in self.visited:
+            # todo - proportional to number of visitations?
+            reward += self.rewards['revisited']
+
         # todo - small negative reward for distance to goal
         # reward += euclidian_cost(self.position, self.end_position) * self.euclidian_cost_weighting
 
@@ -186,6 +190,8 @@ class Agent:
 
         self.position = np.array([next_row, next_col])  # update position
         self.step_count += 1
+
+        self.visited[(row, col)] += 1  # increment visited nodes
 
         self.previous_position = np.copy(self.position)  # update memory of previous position
 
