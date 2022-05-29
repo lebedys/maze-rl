@@ -32,25 +32,27 @@ directions = np.array(
 
 # todo - move to config.py
 # world parameters:
-HEIGHT = 11
-WIDTH = 11
+HEIGHT = 201
+WIDTH = 201
 N_ACTIONS = 5
 
 # default agent rewards:
 REWARDS = {
     'finish': 1.,  # finish maze (win condition)
 
+    # todo - penalize reaching max step_count
+
     # obstacles:
     'wall': -1.0,  # hit wall
     'fire': -1.0,  # hit fire
 
     # movement:
-    'step_taken': -0.,  # take step in any direction
-    'stay': -1.,  # stay in place
+    'step_taken': -0.1,  # take step in any direction
+    'stay': -0.,  # stay in place
 
     # backtracking:
-    'repeat_step': -0.5,  # reverse last action # todo - needs better name
-    'revisited': -0.1,  # revisit previously-visited node
+    'repeat_step': -0.2,  # reverse last action # todo - needs better name
+    'revisited': -0.2,  # revisit previously-visited node
     'unvisited': 0.,  # todo - reward unvisited
 
     # distance metrics:
@@ -89,10 +91,12 @@ class Agent:
         # todo - convert from tuple-indexed dict, to sequential row-col indexing
         self.visited = defaultdict(int)  # dictionary of visited nodes
         self.previous_position = np.array([0, 0])
+        self.previous_direction = Direction.NONE
 
         if self.Q is None:  # if no predefined Q-table provided
             # self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 1. / N_ACTIONS)  # initialize default q values equal for all
-            self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
+            self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 0.)
+            # self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
             # self.Q[1, 1, :] = np.random.rand(5)  # assign random q-values for start position
             self.Q[1, 1, :] = np.array([
                 0, 0, np.random.rand(), np.random.rand(), 0
@@ -130,7 +134,7 @@ class Agent:
              walls: np.ndarray,  # local observation of walls
              fires: np.ndarray,  # local observation of fires
              train=False,  # enable training
-             epsilon: float = 0.0,  # todo - exploration
+             epsilon: float = 0.1,  # todo - exploration
              q_noise: float = 0.0,  # todo - random noise
              ) -> bool:  # random exploration probability
 
@@ -146,12 +150,15 @@ class Agent:
         if np.random.random() < epsilon:  # random exploration
             chosen_q_index = np.random.randint(0, 5)
             random_choice = True
-            print('random choice')
+            # print('random choice')
         else:
             # todo - random noise applied to q value vector
             # pick maximum q-value from Q(s):
             chosen_q_index = np.argmax(q_values)  # select index of highest q-value
+            # chosen_w
             random_choice = False
+
+        # chosen_q_index = np.where(q_values == chosen_q)
 
         chosen_q = q_values[chosen_q_index]  # corresponding q value
         chosen_direction = directions[chosen_q_index]  # choose corresponding direction
@@ -182,20 +189,16 @@ class Agent:
         # next_cell = walls[next_row-row, next_col-col]
         if is_wall(next_cell):  # penalize wall hit
             self.wall_hits += 1
-            print('hit wall at {},{}'.format(current_row, current_col))
+            # print('hit wall at {},{}'.format(current_row, current_col))
             reward += self.rewards['wall']
             next_row, next_col = current_row, current_col  # revert position
         elif is_fire(next_cell):  # penalize fire hit
             reward += self.rewards['fire']
             next_row, next_col = current_row, current_col  # revert position
 
-        if self.step_count is not 0:  # ignore initial step
-            if next_row == prev_row and next_col == prev_col:
-                reward += self.rewards['repeat_step']  # penalize for repeating most recent step
-
         if (next_row, next_col) in self.visited:
             # todo - proportional to number of visitations?
-            reward += self.rewards['revisited'] * self.visited[(next_row, next_col)]
+            reward += self.rewards['revisited']  # * self.visited[(next_row, next_col)]
 
         distance_from_start = euclidian_cost(self.position, self.start_position)
         reward += self.rewards['distance_from_start'] * distance_from_start
@@ -216,18 +219,24 @@ class Agent:
 
             self.Q[current_row, current_col, chosen_q_index] = next_q_value
 
+            if self.step_count is not 0:  # ignore initial step
+                if next_row == prev_row and next_col == prev_col:
+                    self.Q[next_row, next_col, self.previous_q_index] += self.learning_rate * self.rewards['repeat_step']
+                    # reward += self.rewards['repeat_step']  # penalize for repeating most recent step
+
         self.position = np.array([next_row, next_col])  # update position
         self.step_count += 1
 
         self.visited[(current_row, current_col)] += 1  # increment visited nodes
 
         self.previous_position = np.copy(self.position)  # update memory of previous position
+        self.previous_q_index = chosen_q_index
 
         return is_finished
 
     def train(self,
               maze: np.ndarray,
-              max_steps: int = 10  # maximum training steps per epoch
+              max_steps: int = 1_000_000  # maximum training steps per epoch
               ) -> np.ndarray:
 
         self.reset_position()  # initialize agent
