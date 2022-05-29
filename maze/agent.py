@@ -39,20 +39,22 @@ REWARDS = {
     'finish': 1.,  # finish maze (win condition)
 
     # obstacles:
-    'wall': -1.,  # hit wall
-    'fire': -1.,   # hit fire
+    'wall': -1.0,  # hit wall
+    'fire': -1.0,   # hit fire
 
     # movement:
-    'step_taken': -0.01,  # take step in any direction
-    'stay': -0.3,        # stay in place
+    'step_taken': -0.,  # take step in any direction
+    'stay': -0.,        # stay in place
 
     # backtracking:
-    'repeat_step': -0.1,  # reverse last action # todo - needs better name
+    'repeat_step': -0.05,  # reverse last action # todo - needs better name
     'revisited': -0.05,   # revisit previously-visited node
+    'unvisited': 0., # todo - reward unvisited
 
     # distance metrics:
-    'distance_to_end': -0.01,
-    'distance_from_start': 0.01
+    'distance_to_end': -0.,
+    'distance_from_start': 0.
+    # todo - change from euclidian to manhattan distance?
 }
 
 
@@ -64,10 +66,8 @@ class Agent:
                  max_steps: int = 10_000_000,   # maximum path length
                  Q: np.ndarray = None,          # Q-table
                  rewards: dict = REWARDS,       # rewards
-                 discount: float = 0.9,         # discount factor
-                 learning_rate: float = 0.1,
-                 # todo - change from euclidian to manhattan distance?
-                 euclidian_cost_weighting: float = 0.05,  # todo - explore impact of this parameter
+                 discount: float = 0.5,         # discount factor
+                 learning_rate: float = 1.,    # q-table learning rate
                  ):
 
         self.start_position = np.array(list(start_position), dtype=int)
@@ -76,8 +76,6 @@ class Agent:
         self.rewards = rewards
         self.learning_rate = learning_rate
         self.discount = discount  # discount factor (gamma)
-
-        self.euclidian_cost_weighting = euclidian_cost_weighting
 
         # initialize agent position:
         self.position = np.copy(self.start_position)  # initial position
@@ -91,8 +89,12 @@ class Agent:
         self.previous_position = np.array([0, 0])
 
         if self.Q is None:  # if no predefined Q-table provided
-            self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 1. / N_ACTIONS)  # initialize default q values equal for all
-            self.Q[1, 1, :] = np.random.rand(5)  # assign random q-values for start position
+            # self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 1. / N_ACTIONS)  # initialize default q values equal for all
+            self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
+            # self.Q[1, 1, :] = np.random.rand(5)  # assign random q-values for start position
+            self.Q[1, 1, :] = np.array([
+                0, 0, np.random.rand(1), np.random.rand(1), 0
+            ])
             # todo - add noise or some randomness
 
     def reset_position(self) -> None:
@@ -124,8 +126,8 @@ class Agent:
         prev_row, prev_col = self.previous_position[0], self.previous_position[1]  # decompose previous position
 
         # get Q(s) vector:
-        row, col = self.position
-        q_values = self.Q[row, col, :]
+        current_row, current_col = self.position
+        q_values = self.Q[current_row, current_col, :]
 
         if np.random.random() < epsilon:  # random exploration
             chosen_q_index = np.random.randint(0, 5)
@@ -145,7 +147,7 @@ class Agent:
         # walls = walls.flatten()
         # fires = fires.flatten()
 
-        next_row, next_col = row, col
+        next_row, next_col = current_row, current_col
         if chosen_direction == Direction.NONE:  # no change in position
             reward += self.rewards['stay']  # penalty for staying in place
             next_cell = walls[1, 1]
@@ -168,12 +170,12 @@ class Agent:
         # next_cell = walls[next_row-row, next_col-col]
         if is_wall(next_cell):    # penalize wall hit
             self.wall_hits += 1
-            print('hit wall at {},{}'.format(row, col))
+            print('hit wall at {},{}'.format(current_row, current_col))
             reward += self.rewards['wall']
-            next_row, next_col = row, col  # revert position
+            next_row, next_col = current_row, current_col  # revert position
         elif is_fire(next_cell):  # penalize fire hit
             reward += self.rewards['fire']
-            next_row, next_col = row, col  # revert position
+            next_row, next_col = current_row, current_col  # revert position
 
         if self.step_count is not 0:  # ignore initial step
             if next_row == prev_row and next_col == prev_col:
@@ -195,13 +197,18 @@ class Agent:
 
         if train:  # update q-table
             max_q = self.Q[next_row, next_col, :].max()
-            self.Q[row, col, chosen_q_index] += \
-                self.learning_rate * (reward - chosen_q + self.discount * max_q)
+            current_q_value = self.Q[current_row, current_col, chosen_q_index]
+
+            next_q_value = current_q_value + self.learning_rate * (reward - chosen_q + self.discount * max_q)
+            next_q_value = max(0, next_q_value)  # set minimum to 0
+
+            self.Q[current_row, current_col, chosen_q_index] = next_q_value
+
 
         self.position = np.array([next_row, next_col])  # update position
         self.step_count += 1
 
-        self.visited[(row, col)] += 1  # increment visited nodes
+        self.visited[(current_row, current_col)] += 1  # increment visited nodes
 
         self.previous_position = np.copy(self.position)  # update memory of previous position
 
