@@ -17,47 +17,74 @@ walls_11 = maze.mazes.sample_mazes.sample_maze_11_A
 wall_color = '#eeeeee'
 path_color = '#111111'
 
-if __name__ == '__main__':
+maze_walls = walls_201
+maze_shape = (201, 201)
+end_position = (199, 199)
 
-    maze_walls = walls_11
-    maze_shape = (11, 11)
-    end_position = (9, 9)
+def train(num_epochs: int = 1):
 
     a0 = agent.Agent(
         end_position=end_position
     )  # instantiate new agent
 
-    train_path = a0.train(maze=maze_walls, max_steps=500)
+    for epoch in range(num_epochs):
 
-    print('exited training.')
+        train_path = a0.train(maze=maze_walls, max_steps=1000_000)
 
-    fig, ax = plt.subplots()
-    dp.plot_maze_walls(maze_walls,
-                       ax=ax,
-                       cmap=ListedColormap([path_color, wall_color])
-                       )
+        print('exited training {}.'.format(epoch))
 
-    dp.plot_agent_path(train_path, shape=maze_shape,
-                       ax=ax,
-                       cmap=ListedColormap(['none', 'red'])
-                       )
+        fig, ax = plt.subplots()
+        dp.plot_maze_walls(maze_walls,
+                           ax=ax,
+                           cmap=ListedColormap([path_color, wall_color])
+                           )
 
-    plt.show()
+        dp.plot_agent_path(train_path, shape=maze_shape,
+                           ax=ax,
+                           cmap=ListedColormap(['none', 'orange'])
+                           )
 
-    # todo - penalize path length at end of epoch
-    #      - use this to update policy (q-table) somehow
+        ax.set_title('epoch {}'.format(epoch))
 
-    run_path = a0.run(maze=maze_walls, max_steps=10_000)
+        plt.show()
 
-    fig2, ax = plt.subplots()
-    dp.plot_maze_walls(maze_walls,
-                       ax=ax,
-                       cmap=ListedColormap([path_color, wall_color])
-                       )
 
-    dp.plot_agent_path(run_path, shape=maze_shape,
-                       ax=ax,
-                       cmap=ListedColormap(['none', 'blue'])
-                       )
+if __name__ == '__main__':
 
-    plt.show()
+    train(num_epochs=10)
+
+    # train_path = a0.train(maze=maze_walls, max_steps=1000_000)
+    #
+    # print('exited training.')
+    #
+    # fig, ax = plt.subplots()
+    # dp.plot_maze_walls(maze_walls,
+    #                    ax=ax,
+    #                    cmap=ListedColormap([path_color, wall_color])
+    #                    )
+    #
+    # dp.plot_agent_path(train_path, shape=maze_shape,
+    #                    ax=ax,
+    #                    cmap=ListedColormap(['none', 'red'])
+    #                    )
+    #
+    # plt.show()
+    #
+    # # todo - penalize path length at end of epoch
+    # #      - use this to update policy (q-table) somehow
+    #
+    # run_path = a0.run(maze=maze_walls, max_steps=10_000)
+    #
+    # fig2, ax = plt.subplots()
+    # dp.plot_maze_walls(maze_walls,
+    #                    ax=ax,
+    #                    cmap=ListedColormap([path_color, wall_color])
+    #                    )
+    #
+    # dp.plot_agent_path(run_path, shape=maze_shape,
+    #                    ax=ax,
+    #                    cmap=ListedColormap(['none', 'blue'])
+    #                    )
+    #
+    # plt.show()
+
