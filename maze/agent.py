@@ -164,99 +164,97 @@ class Agent:
         prev_row, prev_col = self.previous_position  # decompose previous position
         current_row, current_col = self.position  # decompose current position
 
-        is_finished = False
         if self.is_finished():
-            reward += self.rewards['finish']
-            is_finished = True
+            return True
 
-            next_row, next_col = self.position
-        else:
+        # select Q(s) vector:
+        q_values = self.Q[current_row, current_col, :]
 
-            # select Q(s) vector:
-            q_values = self.Q[current_row, current_col, :]
+        # consider only valid directions:
+        q_values = self.invalidate_walls(q_values, walls, fires)
+        # todo - invalidate fires
 
-            # consider only valid directions:
-            q_values = self.invalidate_walls(q_values, walls, fires)
-            # todo - invalidate fires
-
-            random_choice = False
-            if np.random.random() < self.exploration_epsilon:  # random exploration
-                # todo - only consider valid actions here
+        is_random_choice = False
+        if np.random.random() < self.exploration_epsilon:  # random exploration
+            is_random_choice = True
+            while True:  # only select if not -np.inf
                 chosen_q_index = np.random.randint(0, 5)
-                random_choice = True
-            else:
-                chosen_q_index = np.argmax(q_values)  # select index of highest q-value
+                if q_values[chosen_q_index] != -np.inf:
+                    break
+        else:
+            chosen_q_index = np.argmax(q_values)  # select index of highest q-value
 
-            # print('random choice:', random_choice)
+        # print('random choice:', is_random_choice)
 
-            chosen_q = q_values[chosen_q_index]  # chosen q value
-            chosen_direction = directions[chosen_q_index]  # choose corresponding direction
+        chosen_q = q_values[chosen_q_index]  # chosen q value
+        chosen_direction = directions[chosen_q_index]  # choose corresponding direction
 
-            next_row, next_col = current_row, current_col
-            if chosen_direction == Direction.NONE:  # no change in position
-                reward += self.rewards['stay']  # penalty for staying in place
-                next_cell = walls[1, 1]
-            elif chosen_direction == Direction.UP:
-                next_row -= 1  # move up
-                next_cell = walls[0, 1]
-            elif chosen_direction == Direction.RIGHT:
-                next_col += 1  # move right
-                next_cell = walls[1, 2]
-            elif chosen_direction == Direction.DOWN:
-                next_row += 1  # move down
-                next_cell = walls[2, 1]
-            elif chosen_direction == Direction.LEFT:
-                next_col -= 1  # move left
-                next_cell = walls[1, 0]
-            else:
-                raise ValueError('Directionality value not valid.')
+        next_row, next_col = current_row, current_col
+        if chosen_direction == Direction.NONE:  # no change in position
+            reward += self.rewards['stay']  # penalty for staying in place
+            next_cell = walls[1, 1]
+        elif chosen_direction == Direction.UP:
+            next_row -= 1  # move up
+            next_cell = walls[0, 1]
+        elif chosen_direction == Direction.RIGHT:
+            next_col += 1  # move right
+            next_cell = walls[1, 2]
+        elif chosen_direction == Direction.DOWN:
+            next_row += 1  # move down
+            next_cell = walls[2, 1]
+        elif chosen_direction == Direction.LEFT:
+            next_col -= 1  # move left
+            next_cell = walls[1, 0]
+        else:
+            raise ValueError('Directionality value not valid.')
 
+        # reward function:
+        if (np.array([next_row, next_col]) == self.end_position).all():
+            reward = self.rewards['finish']
+        else:
             # penalize hitting obstacles:
-            if is_wall(next_cell):  # penalize wall hit
+            if is_wall(next_cell):   # penalize wall hit
                 self.wall_hit_count += 1
-                print('hit wall at {},{}'.format(current_row, current_col))
+                # print('hit wall at {},{}'.format(current_row, current_col))
                 reward += self.rewards['wall']
                 next_row, next_col = current_row, current_col  # revert position
 
             elif is_fire(next_cell):  # penalize fire hit
                 reward += self.rewards['fire']
-                print('hit fire at {},{}'.format(current_row, current_col))
+                # print('hit fire at {},{}'.format(current_row, current_col))
                 next_row, next_col = current_row, current_col  # revert position
 
             if (next_row, next_col) in self.visited:
                 # todo - proportional to number of visitations?
-                reward += self.rewards['revisited']  # * self.visited[(next_row, next_col)]
+                reward += self.rewards['revisited']
 
-            distance_from_start = euclidian_cost(self.position, self.start_position)
-            reward += self.rewards['distance_from_start'] * distance_from_start
+            # distance_from_start = euclidian_cost(self.position, self.start_position)
+            # reward += self.rewards['distance_from_start'] * distance_from_start
 
-            distance_to_end = euclidian_cost(self.position, self.end_position)
-            reward += self.rewards['distance_to_end'] * distance_to_end
+            # distance_to_end = euclidian_cost(self.position, self.end_position)
+            # reward += self.rewards['distance_to_end'] * distance_to_end
 
-            if train:  # update q-table
-                max_q = self.Q[next_row, next_col, :].max()
-                current_q_value = self.Q[current_row, current_col, chosen_q_index]
+        if train:  # update q-table
+            max_q = self.Q[next_row, next_col, :].max()  # todo - what to do if finished?
+            current_q_value = self.Q[current_row, current_col, chosen_q_index]
 
-                next_q_value = current_q_value + self.learning_rate * (reward - chosen_q + self.discount * max_q)
-                # next_q_value = max(0, next_q_value)  # set minimum to 0
+            next_q_value = current_q_value + self.learning_rate * (reward + self.discount * max_q - current_q_value)
+            self.Q[current_row, current_col, chosen_q_index] = next_q_value  # perform update
 
-                self.Q[current_row, current_col, chosen_q_index] = next_q_value
+            # todo:
+            # if self.step_count != 0:  # ignore initial step
+            #     if (next_row, next_col) == (prev_row, prev_col):
+            #         self.Q[next_row, next_col, self.previous_q_index] += self.learning_rate * self.rewards['repeat_step']
 
-                if self.step_count != 0:  # ignore initial step
-                    if next_row == prev_row and next_col == prev_col:
-                        self.Q[next_row, next_col, self.previous_q_index] += self.learning_rate * self.rewards[
-                            'repeat_step']
-                        # reward += self.rewards['repeat_step']  # penalize for repeating most recent step
-
-            self.previous_position = np.copy(self.position)  # update memory of previous position
-            self.previous_q_index = chosen_q_index
+        self.previous_position = np.copy(self.position)  # update memory of previous position
+        self.previous_q_index = chosen_q_index
 
         self.position = np.array([next_row, next_col])  # update position
         self.step_count += 1
 
         self.visited[(current_row, current_col)] += 1  # increment visited nodes
 
-        return is_finished
+        return False
 
     def train(self,
               maze: np.ndarray,
