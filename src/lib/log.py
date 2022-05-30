@@ -1,4 +1,4 @@
-from maze.agent import Agent
+from maze.agent.agent import Agent
 import os
 from datetime import datetime
 

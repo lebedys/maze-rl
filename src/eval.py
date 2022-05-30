@@ -1,6 +1,6 @@
-import maze.mazes.sample_mazes
-from maze.lib import read_maze, log
-from agent import Agent
+import mazes.sample_mazes
+from lib import read_maze, log
+from agent.agent import Agent
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -11,8 +11,8 @@ import numpy as np
 read_maze.load_maze('./mazes/final.npy')
 walls_201 = read_maze.maze_cells[:, :, 0]
 
-walls_9 = maze.mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
-walls_11 = maze.mazes.sample_mazes.sample_maze_11_A
+walls_9 = mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
+walls_11 = mazes.sample_mazes.sample_maze_11_A
 
 wall_color = '#eeeeee'
 path_color = '#111111'
