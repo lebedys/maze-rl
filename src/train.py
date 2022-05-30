@@ -1,5 +1,4 @@
 import src.mazes.sample_mazes
-from lib import read_maze
 
 # agent classes:
 from agent.log import log_agent
@@ -13,8 +12,13 @@ import numpy as np
 
 from config import *
 
-read_maze.load_maze('./mazes/final.npy')
-walls_201 = read_maze.maze_cells[:, :, 0]
+if ENABLE_FAST_READ_MAZE:  # faster maze reading
+    import lib.fast_read_maze as rm
+else:
+    import lib.read_maze as rm
+
+rm.load_maze('./mazes/final.npy')
+walls_201 = rm.maze_cells[:, :, 0]
 
 walls_9 = src.mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
 walls_11 = src.mazes.sample_mazes.sample_maze_11_A
@@ -87,7 +91,7 @@ def train_agent(agent: Agent,
     return a0, train_paths
 
 
-np.random.seed(2022)
+np.random.seed(NUMPY_SEED)
 
 if __name__ == '__main__':
     a0 = Agent(  # instantiate new agent

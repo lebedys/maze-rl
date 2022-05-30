@@ -5,6 +5,12 @@ from enum import Enum
 
 from src.lib.util import is_fire, is_wall, euclidian_cost
 
+from src.config import *
+
+if ENABLE_FAST_READ_MAZE:  # faster maze reading
+    import lib.fast_read_maze as rm
+else:
+    import lib.read_maze as rm
 
 # todo - implement periodic logging
 
