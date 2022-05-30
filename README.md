@@ -35,3 +35,35 @@ included in the `results/` directory.
 ```bash
 
 ```
+
+## Log File
+
+An agent can be logged to a file by calling the `log_agent()` function in the `lib` package.
+
+The agent observation at every time-step is encoded in a text representation for easy logging. 
+`X` marks the position of the agent. `W` denotes a wall.
+A digit (`0-2`) denotes the life-time of a fire.
+If the block is empty, it is an empty path.
+Some examples are shown below.
+
+```txt
+agent surrounded by walls:
+|W|W|W|
+|W|X|W|
+|W|W|W|
+
+agent surrounded by empty paths with walls in the diagonals:
+|W| |W|
+| |X| |
+|W| |W|
+
+agent with one fire:
+|W|W|W|
+| |X|2|
+|W|W|W|
+
+agent with two fires:
+|W|1|W|
+|0|X|W|
+|W| |W|
+```
