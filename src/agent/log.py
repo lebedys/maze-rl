@@ -1,7 +1,6 @@
-from maze.agent.agent import Agent
+from agent import Agent
 import os
 from datetime import datetime
-
 
 def log_agent(agent: Agent, epoch: int, log_dir: str = 'log/') -> None:
     # get absolute directory path
