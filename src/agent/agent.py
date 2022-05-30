@@ -1,12 +1,9 @@
-import random
-
 import numpy as np
 from typing import Tuple
 from collections import defaultdict
-
 from enum import Enum
 
-from maze.lib.util import is_fire, is_wall, euclidian_cost
+from src.lib.util import is_fire, is_wall, euclidian_cost
 
 
 # todo - implement periodic logging

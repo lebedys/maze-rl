@@ -1,5 +1,5 @@
 import numpy as np
-from maze.display import display as dp
+from src.display import display as dp
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 

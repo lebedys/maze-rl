@@ -1,8 +1,7 @@
-from agent import Agent
 import os
 from datetime import datetime
 
-def log_agent(agent: Agent, epoch: int, log_dir: str = 'log/') -> None:
+def log_agent(agent, epoch: int, log_dir: str = 'log/') -> None:
     # get absolute directory path
     log_dir_path = os.path.abspath(log_dir)
     if not os.path.exists(log_dir_path):
@@ -37,9 +36,3 @@ def log_agent(agent: Agent, epoch: int, log_dir: str = 'log/') -> None:
 
         f.write('\nAGENT HISTORY\n')
         f.write(agent_history)
-
-
-if __name__ == '__main__':
-    a0 = Agent
-
-    log_agent(a0, epoch=0)

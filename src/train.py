@@ -1,8 +1,9 @@
 import src.mazes.sample_mazes
 from lib import read_maze
 
-from agent.agent import Agent
+# agent classes:
 from agent.log import log_agent
+from agent.agent import Agent
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -39,6 +40,8 @@ def train_agent(agent: Agent,
                 plot: bool = True,  # plot path
                 log: bool = True,   # log history
                 ):
+
+    print('Starting Training')
 
     train_paths = []
 
