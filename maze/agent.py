@@ -37,7 +37,7 @@ N_ACTIONS = 5
 
 # default agent rewards:
 REWARDS = {
-    'finish': 1.,  # finish maze (win condition)
+    'finish': 10.,  # finish maze (win condition)
 
     # todo - penalize reaching max step_count
 
@@ -46,12 +46,12 @@ REWARDS = {
     'fire': -1.0,  # hit fire
 
     # movement:
-    'step_taken': -0.1,  # take step in any direction
-    'stay': -0.,  # stay in place
+    'step_taken': -0.,  # take step in any direction
+    'stay': -1.,  # stay in place
 
     # backtracking:
-    'repeat_step': -0.2,  # reverse last action # todo - needs better name
-    'revisited': -0.2,  # revisit previously-visited node
+    'repeat_step': -0.5,  # reverse last action # todo - needs better name
+    'revisited': -0.1,  # revisit previously-visited node
     'unvisited': 0.,  # todo - reward unvisited
 
     # distance metrics:
@@ -69,14 +69,17 @@ class Agent:
 
                  # parameters:
                  Q: np.ndarray = None,  # Q-table
+                 width: int = 201,
+                 height: int = 201,
+                 n_actions: int = 5,
 
                  # rewards:
                  rewards: dict = REWARDS,  # rewards
 
                  # hyper-parameters:
                  learning_rate: float = 0.1,  # q-table learning rate
-                 discount: float = 0.5,  # discount factor
-                 exploration_epsilon: float = 0.1  # probability of random exploration
+                 discount: float = 0.9,  # discount factor
+                 exploration_epsilon: float = 0.15  # probability of random exploration
                  ):
 
         self.start_position = np.array(list(start_position), dtype=int)
@@ -84,10 +87,9 @@ class Agent:
         self.Q = Q
         self.rewards = rewards
 
+        # hyper-parameters
         self.learning_rate = learning_rate
-
         self.discount = discount  # discount factor (gamma)
-
         self.exploration_epsilon = exploration_epsilon  # probability of random exploration
 
         # initialize agent position:
@@ -98,27 +100,34 @@ class Agent:
         self.wall_hit_count: int = 0
         self.fire_hit_count: int = 0
 
-        # dictionary of visited nodes:
+        # hashmap of visited nodes:
         self.visited = defaultdict(int)
 
         # memory of previous step:
         self.previous_position = np.array([0, 0])
         self.previous_q_index = Direction.NONE
 
-        if self.Q is None:  # if no predefined Q-table provided
-            self.Q = np.full((WIDTH, HEIGHT, N_ACTIONS), 0.)
+        # store history:
+        self.history = {}
+        # todo - log action, position, epsilon random choice, step count, epoch, metadata
 
-            # experimented with random normal initial values:
-            # self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
+        if self.Q is None:  # if no Q-table provided
+            self.init_q_table(width, height, n_actions)
 
-            # special values for initial position in q-table:
-            self.Q[1, 1, :] = np.array([
-                0,  # NONE
-                0,  # UP
-                np.random.normal(loc=0.5, scale=0.1),  # RIGHT
-                np.random.normal(loc=0.5, scale=0.1),  # DOWN
-                0,  # LEFT
-            ])
+    def init_q_table(self, width:int, height:int, n_actions:int) -> None:
+        self.Q = np.full((width, height, n_actions), 0.)
+
+        # random normal initial values:
+        # self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
+
+        # initial position allows only RIGHT and DOWN directions
+        self.Q[1, 1, :] = np.array([
+            0,  # NONE
+            0,  # UP
+            np.random.normal(loc=0.5, scale=0.1),  # RIGHT
+            np.random.normal(loc=0.5, scale=0.1),  # DOWN
+            0,  # LEFT
+        ])
 
     def reset_position(self) -> None:
         self.position = np.copy(self.start_position)  # initial position
@@ -148,31 +157,36 @@ class Agent:
                           ])
 
         q_values[walls == 0.0] = -np.inf
-
-        # todo - invalidate fires
-
         return q_values
 
     def step(self,
              walls: np.ndarray,  # local observation of walls
              fires: np.ndarray,  # local observation of fires
              train=False,  # enable training (updating Q-table)
+
+             # step hyperparameters:
+             learning_rate: float = 0.1,
+             exploration_epsilon: float = 0.1,
              ) -> bool:  # random exploration probability
 
-        reward = self.rewards['step_taken']  # add initial penalty for making any action
+        reward = self.rewards['step_taken']  # initialize reward
 
-        prev_row, prev_col = self.previous_position  # decompose previous position
-        current_row, current_col = self.position  # decompose current position
+        # decompose positions into row, col
+        prev_row, prev_col = self.previous_position  # previous position
+        current_row, current_col = self.position     # current position
 
+        # -----------------------
+        # check if maze completed
         if self.is_finished():
             return True
 
         # select Q(s) vector:
         q_values = self.Q[current_row, current_col, :]
 
-        # consider only valid directions:
+        # consider only VALID ACTIONS:
         q_values = self.invalidate_walls(q_values, walls, fires)
-        # todo - invalidate fires
+
+        # todo - temporarily invalidate fires somehow
 
         is_random_choice = False
         if np.random.random() < self.exploration_epsilon:  # random exploration
@@ -183,8 +197,6 @@ class Agent:
                     break
         else:
             chosen_q_index = np.argmax(q_values)  # select index of highest q-value
-
-        # print('random choice:', is_random_choice)
 
         chosen_q = q_values[chosen_q_index]  # chosen q value
         chosen_direction = directions[chosen_q_index]  # choose corresponding direction
@@ -224,34 +236,50 @@ class Agent:
                 # print('hit fire at {},{}'.format(current_row, current_col))
                 next_row, next_col = current_row, current_col  # revert position
 
+                # todo - consider waiting here
+
+            # re-visitation penalties:
             if (next_row, next_col) in self.visited:
-                # todo - proportional to number of visitations?
-                reward += self.rewards['revisited']
+                # penalty is inversely proportional to number of cell re-visitations
+                reward += self.rewards['revisited'] / self.visited[(next_row, next_col)]
+            else:
+                reward += self.rewards['unvisited']
 
-            # distance_from_start = euclidian_cost(self.position, self.start_position)
-            # reward += self.rewards['distance_from_start'] * distance_from_start
+            # distance penalties:
+            distance_from_start = euclidian_cost(self.position, self.start_position)
+            reward += self.rewards['distance_from_start'] * distance_from_start
 
-            # distance_to_end = euclidian_cost(self.position, self.end_position)
-            # reward += self.rewards['distance_to_end'] * distance_to_end
+            distance_to_end = euclidian_cost(self.position, self.end_position)
+            reward += self.rewards['distance_to_end'] * distance_to_end
 
+        # -------------
+        # TRAIN Q-TABLE
+        # -------------
         if train:  # update q-table
             max_q = self.Q[next_row, next_col, :].max()  # todo - what to do if finished?
             current_q_value = self.Q[current_row, current_col, chosen_q_index]
 
-            next_q_value = current_q_value + self.learning_rate * (reward + self.discount * max_q - current_q_value)
-            self.Q[current_row, current_col, chosen_q_index] = next_q_value  # perform update
+            new_q_value = current_q_value + learning_rate * (reward + self.discount * max_q - current_q_value)
+            self.Q[current_row, current_col, chosen_q_index] = new_q_value  # perform update
 
-            # todo:
-            # if self.step_count != 0:  # ignore initial step
-            #     if (next_row, next_col) == (prev_row, prev_col):
-            #         self.Q[next_row, next_col, self.previous_q_index] += self.learning_rate * self.rewards['repeat_step']
+            if self.step_count != 0 and (next_row, next_col) == (prev_row, prev_col):  # ignore initial step
+                max_q = self.Q[current_row, current_col, :].max()
+                prev_q_value = self.Q[prev_row, prev_col, self.previous_q_index]
+                reward = self.rewards['repeat_step']
+
+                new_prev_q_value = prev_q_value + learning_rate * (reward + self.discount * max_q - prev_q_value)
+                self.Q[prev_row, prev_col, self.previous_q_index] = new_prev_q_value  # perform update
+
+        # ---------------
+        # UPDATE POSITION
+        # ---------------
 
         self.previous_position = np.copy(self.position)  # update memory of previous position
         self.previous_q_index = chosen_q_index
 
         self.position = np.array([next_row, next_col])  # update position
-        self.step_count += 1
 
+        self.step_count += 1
         self.visited[(current_row, current_col)] += 1  # increment visited nodes
 
         return False
