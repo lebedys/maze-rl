@@ -13,7 +13,7 @@ maze challenge for COMP6247 Reinforcement & Online Learning.
 
 Run the following to execute a pretrained agent on a maze.
 ```bash
-python run.py
+python eval.py
 ```
 
 To train the agent, run the following.
@@ -34,6 +34,18 @@ included in the `results/` directory.
 
 ```bash
 
+```
+
+## Pretrained Agents
+
+The pretrained Q-table for an agent can be loaded in directly.
+
+A Q-table for the optimal agent is provided in the `pretrained-agents/` directory.
+
+Running the following will run this agent on the maze.
+
+```bash
+python pretrained.py
 ```
 
 ## Log File
