@@ -32,38 +32,6 @@ directions = np.array(
     [Direction.NONE, Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
 )
 
-# todo - move to config.py
-# world parameters:
-HEIGHT = 201
-WIDTH = 201
-N_ACTIONS = 5
-
-# default agent rewards:
-REWARDS = {
-    'finish': 10.,  # finish maze (win condition)
-
-    # todo - penalize reaching max step_count
-
-    # obstacles:
-    'wall': -1.0,  # hit wall
-    'fire': -1.0,  # hit fire
-
-    # movement:
-    'step_taken': -0.,  # take step in any direction
-    'stay': -1.,  # stay in place
-
-    # backtracking:
-    'repeat_step': -0.5,  # reverse last action # todo - needs better name
-    'revisited': -0.1,  # revisit previously-visited node
-    'unvisited': 0.,  # todo - reward unvisited
-
-    # distance metrics:
-    'distance_to_end': -0.,
-    'distance_from_start': 0.
-    # todo - change from euclidian to manhattan distance?
-}
-
-
 class Agent:
 
     def __init__(self,
