@@ -1,5 +1,5 @@
 import maze.mazes.sample_mazes
-from maze.lib import read_maze
+from maze.lib import read_maze, log
 from agent import Agent
 
 import matplotlib.pyplot as plt
@@ -21,22 +21,28 @@ maze_walls = walls_201
 maze_shape = maze_walls.shape
 end_position = tuple(np.subtract(maze_shape, (2, 2)))
 
-def run_agent(agent: Agent,
+def eval_agent(agent: Agent,
               num_epochs: int = 1,
               max_steps: int = 100_000):
+    # todo - return evaluated agent
     return []
 
 
 def train_agent(agent: Agent,
                 num_epochs: int = 1,
                 max_steps: int = 1_000_000,
-                eval: bool = True  # evaluate 
+                eval: bool = True,  # evaluate
+                plot: bool = True,  # plot path
+                log: bool = True,   # log history
                 ):
+
     train_paths = []
 
     for epoch in range(num_epochs):
         train_path = a0.train(maze=maze_walls, max_steps=max_steps)
         train_paths.append(train_path)
+
+        log.log_agent()
 
         print('exited training {}.'.format(epoch))
 
