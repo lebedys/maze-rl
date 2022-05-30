@@ -7,6 +7,7 @@ import random
 import time
 
 from src.config import NUMPY_SEED
+NUMPY_SEED = 1234
 
 # from src.lib.read_maze import maze_cells
 
@@ -37,7 +38,7 @@ def test_frm(iterations: int = 100_000):  # read maze
 
 if __name__ == '__main__':
 
-    iterations = 100_000
+    iterations = 100
 
     np.random.seed(NUMPY_SEED)
     random.seed(NUMPY_SEED)
@@ -48,19 +49,20 @@ if __name__ == '__main__':
     rm_positions, rm_observations = test_rm(iterations)
     rm_t2 = time.process_time_ns()
     rm_elapsed = rm_t2 - rm_t1
-    print('elapsed (RM):', rm_elapsed)
+    print('elapsed (RM):', rm_elapsed, 'ns')
 
     rm_maze_cells = rm.maze_cells.copy()
 
     np.random.seed(NUMPY_SEED)
     random.seed(NUMPY_SEED)
 
-    rm.load_maze('../mazes/final.npy')
+    frm.load_maze('../mazes/final.npy')
+
     frm_t1 = time.process_time_ns()
     frm_positions, frm_observations = test_frm(iterations)
     frm_t2 = time.process_time_ns()
     frm_elapsed = frm_t2 - frm_t1
-    print('elapsed (fast RM):', frm_elapsed)
+    print('elapsed (fast RM):', frm_elapsed, 'ns')
 
     frm_maze_cells = rm.maze_cells.copy()
 
