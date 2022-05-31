@@ -5,7 +5,9 @@ from enum import IntEnum
 
 from src.lib.util import is_fire, is_wall, euclidian_cost
 
-from src.config import *
+from src.config import ENABLE_FAST_READ_MAZE
+from src.config import ENABLE_FIRES
+from src.config import REWARDS
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading
     import src.lib.fast_read_maze as rm
@@ -253,36 +255,27 @@ class Agent:
         else:
             raise ValueError('Directionality value not valid.')
 
-        # reward function:
-        if is_fire(next_fire):  # penalize fire hit
-            # reward += self.rewards['fire']
-            # print('hit fire at {},{}'.format(current_row, current_col))
+        # prevent walking through walls:
+        if is_wall(next_cell):  # penalize wall hit
+            self.wall_hit_count += 1
+            # print('hit wall at {},{}'.format(current_row, current_col))
+            reward += self.rewards['wall']
             next_row, next_col = current_row, current_col  # revert position
-            # reward = self.rewards['fire']
-            # todo - better fire policy
+
+        # reward function:
+        if ENABLE_FIRES and is_fire(next_fire):  # penalize fire hit
+            next_row, next_col = current_row, current_col  # revert position
+            # todo - implement better fire policy
         else:
 
             if (np.array([next_row, next_col]) == self.end_position).all():
                 reward = self.rewards['finish']
             else:
-                # penalize hitting obstacles:
-                if is_wall(next_cell):  # penalize wall hit
-                    self.wall_hit_count += 1
-                    # print('hit wall at {},{}'.format(current_row, current_col))
-                    reward += self.rewards['wall']
-                    next_row, next_col = current_row, current_col  # revert position
-
-                if is_fire(next_fire):  # penalize fire hit
-                    # reward += self.rewards['fire']
-                    # print('hit fire at {},{}'.format(current_row, current_col))
-                    next_row, next_col = current_row, current_col  # revert position
-
-                    # todo - consider waiting here
 
                 # re-visitation penalties:
                 if (next_row, next_col) in self.visited:
                     # penalty is inversely proportional to number of cell re-visitations
-                    reward += self.rewards['revisited'] / self.visited[(next_row, next_col)]
+                    reward += self.rewards['revisited'] * self.visited[(next_row, next_col)]
                 else:
                     reward += self.rewards['unvisited']
 

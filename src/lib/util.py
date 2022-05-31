@@ -27,7 +27,7 @@ def euclidian_cost(position, goal) -> np.float:
 
 
 def is_wall(cell) -> bool:
-    return cell == 0.0
+    return cell == 0
 
 
 def is_fire(cell) -> bool:
