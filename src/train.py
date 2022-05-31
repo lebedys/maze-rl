@@ -27,9 +27,10 @@ maze_walls = walls_201
 maze_shape = maze_walls.shape
 end_position = tuple(np.subtract(maze_shape, (2, 2)))
 
+
 def eval_agent(agent: Agent,
-              num_epochs: int = 1,
-              max_steps: int = 100_000):
+               num_epochs: int = 1,
+               max_steps: int = 100_000):
     # todo - return evaluated agent
     return []
 
@@ -39,38 +40,42 @@ def train_agent(agent: Agent,
                 max_steps: int = 1_000_000,
                 eval: bool = True,  # evaluate
                 plot: bool = True,  # plot path
-                log: bool = True,   # log history
+                log: bool = True,  # log history
                 ):
-
     print('Starting Training')
 
     train_mazes = []
     eval_mazes = []
 
     for epoch in range(num_epochs):
-        maze = rm.load_maze(MAZE_PATH)
-        train_maze = a0.train(maze=maze, max_steps=max_steps)
-        train_mazes.append(train_maze)
+        # train agent:
+        train_maze = rm.load_maze(MAZE_PATH)
+        train_maze = a0.train(maze=train_maze, max_steps=max_steps)
+        train_mazes.append(train_maze.copy())
 
         log_agent(a0, epoch=epoch)  # log full epoch history
 
-        print('exited training {}.'.format(epoch))
+        print('--- exited training epoch={}.'.format(epoch))
 
+        # todo - move plotting out of here
         fig, ax = plt.subplots()
         dp.plot_maze_walls(maze_walls,
                            ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
 
-        dp.plot_agent_path(train_maze, shape=maze_shape,
+        train_path = a0.history['position']
+        dp.plot_agent_path(train_path, shape=maze_shape,
                            ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
 
-        ax.set_title('epoch {}'.format(epoch))
+        ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
 
         plt.show()
 
-        print('plotted epoch {}'.format(epoch))
+        print('plotted epoch={}'.format(epoch))
 
-        # run without training for results:
-        run_path = a0.run(maze=maze_walls, max_steps=100_000)
+        # eval agent:
+        eval_maze = rm.load_maze(MAZE_PATH)
+        eval_maze = a0.eval(maze=eval_maze, max_steps=max_steps)
+        eval_mazes.append(eval_maze.copy())
 
         fig, ax = plt.subplots()
         dp.plot_maze_walls(maze_walls,
@@ -78,16 +83,18 @@ def train_agent(agent: Agent,
                            cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
                            )
 
-        dp.plot_agent_path(run_path, shape=maze_shape,
+        eval_path = a0.history['position']
+        dp.plot_agent_path(eval_path, shape=maze_shape,
                            ax=ax,
                            cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
                            )
 
-        ax.set_title('epoch {}'.format(epoch))
+        ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
 
         plt.show()
 
-    return a0, train_mazes
+    return a0, train_mazes, eval_mazes
+
 
 if __name__ == '__main__':
     a0 = Agent(  # instantiate new agent
@@ -97,9 +104,8 @@ if __name__ == '__main__':
         n_actions=5,
     )
 
-    trained_agent, training_paths = train_agent(a0,
-                                                num_epochs=1,
-                                                max_steps=1000)
+    # trained_agent, train_mazes, eval_mazes = \
+    train_agent(a0, num_epochs=2, max_steps=1000)
 
 # todo - penalize path length at end of epoch
 #      - use this to update policy (q-table) somehow

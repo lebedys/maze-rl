@@ -117,12 +117,12 @@ class Agent:
         # run_path[0, :] = self.position  # add initial position
 
         self.history = {
-            'position': np.empty(shape=(max_steps + 1, 2), dtype=int),
-            'observation': np.empty(shape=(max_steps + 1, 3, 3, 2), dtype=int),
-            'q_values': np.empty(shape=(max_steps + 1, 5), dtype=float),
-            'action': np.empty(shape=(max_steps + 1), dtype=Direction),
-            'is_random_choice': np.empty(shape=(max_steps + 1), dtype=bool),
-            'is_finished': np.empty(shape=(max_steps + 1), dtype=bool),
+            'position': np.empty(shape=(max_steps, 2), dtype=int),
+            'observation': np.empty(shape=(max_steps, 3, 3, 2), dtype=int),
+            'q_values': np.empty(shape=(max_steps, 5), dtype=float),
+            'action': np.empty(shape=(max_steps), dtype=Direction),
+            'is_random_choice': np.empty(shape=(max_steps), dtype=bool),
+            'is_finished': np.empty(shape=(max_steps), dtype=bool),
         }
 
     def reset_position(self) -> None:
@@ -141,9 +141,9 @@ class Agent:
         # todo - log observation
 
         row, col = self.position
-        observation = rm.get_local_maze_information(row, col)
+        new_maze, observation = rm.get_local_maze_information(maze, row, col)
         # return maze[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1]
-        return observation
+        return new_maze, observation
 
     def invalidate_walls(self, q_values: np.ndarray, walls: np.ndarray, fires: np.ndarray) -> np.ndarray:
 
@@ -176,6 +176,8 @@ class Agent:
         # -----------------------
         # check if maze completed
         if self.is_finished():
+            # todo
+            # self.history['is_finished'][self.step_count] = True
             return True
 
         # select Q(s) vector:

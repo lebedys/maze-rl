@@ -15,8 +15,7 @@ def params_to_str(agent: Agent) -> str:
     params_str = '''
     rewards: {rewards}
     '''.format(
-        lr=agent.learning_rate,
-        epsilon=agent.exploration_epsilon
+        rewards=agent.rewards
     )
 
     return params_str
@@ -47,11 +46,17 @@ def history_to_str(agent: Agent) -> str:
         row, col = agent.history['position'][step]
         observation_str = observation_to_str(agent.history['observation'][step])
         q_values = agent.history['q_values'][step]
-        action = agent.history['action'][step].name
-        is_random_choice = agent.history['is_random']
-        is_finished = agent.history['is_finished']
+
+        try:
+            action = agent.history['action'][step].name
+        except BaseException:
+            action = agent.history['action'][step]
+
+        is_random_choice = agent.history['is_random_choice'][step]
+        is_finished = agent.history['is_finished'][step]
 
         history_str += '''
+        ---
         step = {step},
         position = ({row}, {col}),
         observation = {observation},
@@ -59,6 +64,8 @@ def history_to_str(agent: Agent) -> str:
         chosen action = {action},
         random exploration choice? = {is_random_choice},
         maze finished? = {is_finished}
+        ---
+        
         '''.format(
             step=step,
             row=row, col=col,
@@ -92,7 +99,7 @@ def log_agent(agent: Agent, epoch: int,
 
     # string representations of epoch information:
         # todo - rewards (and other params)
-    agent_params = ''  # params_to_str(agent)
+    agent_params = params_to_str(agent)
     agent_hyperparams = hyper_params_to_str(agent)
     agent_history = history_to_str(agent)
 
@@ -106,7 +113,7 @@ def log_agent(agent: Agent, epoch: int,
         f.write('----------------------\n')
 
         f.write('\nAGENT PARAMETERS\n')
-        f.write(agent_hyperparams)
+        f.write(agent_params)
 
         f.write('\nAGENT HYPER-PARAMETERS\n')
         f.write(agent_hyperparams)
