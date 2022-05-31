@@ -71,20 +71,24 @@ def history_to_str(agent: Agent) -> str:
 
     return history_str
 
-
-def log_agent(agent: Agent, epoch: int, log_dir: str = 'log/') -> None:
+# todo - allow logging to chosen file
+def log_agent(agent: Agent, epoch: int,
+              log_dir: str = 'log/',
+              log_file_name: str = None) -> None:
     # get absolute directory path
     log_dir_path = os.path.abspath(log_dir)
     if not os.path.exists(log_dir_path):
         os.makedirs(log_dir_path)
 
-    # file uses date/time to generate unique name
-    datetime_obj = datetime.now()
-    time_stamp = datetime_obj.strftime("%Y%d%m_%H%M%S")
+    if not log_file_name:  # no log file name provided
+        # file uses date/time to generate unique name
+        datetime_obj = datetime.now()
+        time_stamp = datetime_obj.strftime("%Y%d%m_%H%M%S")
 
-    # generate file name:
-    file_name = 'log_' + time_stamp + '.log'
-    log_file_path = os.path.join(log_dir_path, file_name)
+        # generate file name:
+        log_file_name = 'log_' + time_stamp + '.log'
+
+    log_file_path = os.path.join(log_dir_path, log_file_name)
 
     # string representations of epoch information:
         # todo - rewards (and other params)
