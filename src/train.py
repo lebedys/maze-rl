@@ -4,6 +4,8 @@ import src.mazes.sample_mazes
 from src.lib.log import log_agent
 from agent.agent import Agent
 
+from eval import eval_agent
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import display.display as dp
@@ -28,11 +30,19 @@ maze_shape = maze_walls.shape
 end_position = tuple(np.subtract(maze_shape, (2, 2)))
 
 
-def eval_agent(agent: Agent,
-               num_epochs: int = 1,
-               max_steps: int = 100_000):
-    # todo - return evaluated agent
-    return []
+def plot_training(epoch: int):
+    # todo - move plotting out of here
+    fig, ax = plt.subplots()
+    dp.plot_maze_walls(maze_walls,
+                       ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
+
+    train_path = a0.history['position']
+    dp.plot_agent_path(train_path, shape=maze_shape,
+                       ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
+
+    ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
+
+    plt.show()
 
 
 def train_agent(agent: Agent,
@@ -40,6 +50,7 @@ def train_agent(agent: Agent,
                 max_eval_steps: int = 100_000,
                 max_train_steps: int = 1_000_000,
                 eval: bool = True,  # evaluate
+                num_eval_epochs: int = 1,  # evaluation epoch number
                 plot: bool = True,  # plot path
                 log_train: bool = True,  # log history
                 log_eval: bool = True
@@ -47,7 +58,7 @@ def train_agent(agent: Agent,
     print('Starting Training')
 
     train_mazes = []
-    eval_mazes = []
+    eval_mazes = []  # returns empty if eval disabled
 
     for epoch in range(num_epochs):
         # train agent:
@@ -55,52 +66,25 @@ def train_agent(agent: Agent,
         train_maze = a0.train(maze=train_maze, max_steps=max_train_steps)
         train_mazes.append(train_maze.copy())
 
+        maze_walls = train_maze[:, :, 0]
+        maze_shape = maze_walls.shape
+
         if log_train:
             log_agent(a0, epoch=epoch)  # log full epoch history
 
         print('--- exited training epoch={}.'.format(epoch))
 
         if plot:
-            # todo - move plotting out of here
-            fig, ax = plt.subplots()
-            dp.plot_maze_walls(maze_walls,
-                               ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
-
-            train_path = a0.history['position']
-            dp.plot_agent_path(train_path, shape=maze_shape,
-                               ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
-
-            ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
-
-            plt.show()
+            plot_training(epoch)
 
         print('plotted epoch={}'.format(epoch))
 
-        if eval:
-            # eval agent:
-            eval_maze = rm.load_maze(MAZE_PATH)
-            eval_maze = a0.eval(maze=eval_maze, max_steps=max_eval_steps)
-            eval_mazes.append(eval_maze.copy())
-
-            if log_eval:
-                log_agent(a0, epoch=epoch)  # log full epoch history
-
-            if plot:
-                fig, ax = plt.subplots()
-                dp.plot_maze_walls(maze_walls,
-                                   ax=ax,
-                                   cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
-                                   )
-
-                eval_path = a0.history['position']
-                dp.plot_agent_path(eval_path, shape=maze_shape,
-                                   ax=ax,
-                                   cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
-                                   )
-
-                ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
-
-                plt.show()
+        if eval:  # evaluate after every epoch
+            eval_mazes = eval_agent(agent=a0,
+                                    max_eval_steps=max_eval_steps,
+                                    log_eval=log_eval,
+                                    plot=plot,
+                                    num_epochs=num_eval_epochs)
 
     return a0, train_mazes, eval_mazes
 
