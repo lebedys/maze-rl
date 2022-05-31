@@ -2,7 +2,7 @@ import os
 import numpy as np
 import random
 
-import src.lib.read_maze as rm
+# import src.lib.read_maze as rm
 
 from enum import Enum
 
@@ -35,7 +35,7 @@ class PathType(Enum):
     PATH = 1.0
 
 
-maze_cells = np.zeros((201, 201, 2), dtype=int)
+# maze_cells = np.zeros((201, 201, 2), dtype=int)
 
 
 # load maze
@@ -46,7 +46,7 @@ def load_maze(maze_file_path='mazes/final.npy'):
         raise ValueError("Cannot find %s" % maze_file_path)
 
     else:
-        global maze_cells
+        # global maze_cells
         maze = np.load(maze_file_path, allow_pickle=False, fix_imports=True)
         maze_cells = np.zeros((maze.shape[0], maze.shape[1], 2), dtype=int)
         for i in range(maze.shape[0]):
@@ -56,25 +56,27 @@ def load_maze(maze_file_path='mazes/final.npy'):
                 maze_cells[i][j][1] = 0
                 # initialized to 0 denoting no fire
 
+    return maze_cells
 
 def map_flag_to_location(flag: int):  # return
     return flag_list_mapping[flag]
 
 
-def get_local_maze_information(row: int, col: int) -> np.ndarray:
+def get_local_maze_information(maze_cells: np.ndarray,
+                               row: int, col: int) -> np.ndarray:
     random_flag = random.choice(flag_list)
 
     # --- DECREMENT FIRE (OPTIMIZED):
 
     # create mask of cells where fires are present:
-    fire_mask = (rm.maze_cells[:, :, 1] > 0)
+    fire_mask = (maze_cells[:, :, 1] > 0)
     # fire_locs = rm.maze_cells[:, :, 1].nonzero()
     # if fire_locs[0].any():
     #     print(fire_locs)
-    rm.maze_cells[:, :, 1][fire_mask] -= 1  # decrement masked cells
+    maze_cells[:, :, 1][fire_mask] -= 1  # decrement masked cells
 
     # get segment of cells at (row, col) position in maze:
-    around = rm.maze_cells[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1, :].astype(int)
+    around = maze_cells[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1, :].astype(int)
 
     # --- GENERATE NEW FIRE (UN-OPTIMIZED):
 
@@ -85,9 +87,9 @@ def get_local_maze_information(row: int, col: int) -> np.ndarray:
                     continue
                 ran_time = random.choice(time_list)
                 around[i][j][1] = ran_time + around[i][j][1]
-                rm.maze_cells[row - 1 + i][col - 1 + j][1] = around[i][j][1]
+                maze_cells[row - 1 + i][col - 1 + j][1] = around[i][j][1]
 
-    return around
+    return maze_cells, around
 
 # todo - unfinished previous optimization code:
 # spawn new fire:

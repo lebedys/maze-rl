@@ -14,7 +14,7 @@ flag_list = [0, 1, 2, 3, 5, 6, 7, 8]
 time_list = [0, 1, 2]
 
 # the maze of size 201*201*2
-maze_cells = np.zeros((201, 201, 2), dtype=int)
+# maze_cells = np.zeros((201, 201, 2), dtype=int)
 
 
 # load maze
@@ -23,7 +23,7 @@ def load_maze(maze_file_path='mazes/final.npy'):
         raise ValueError("Cannot find %s" % maze_file_path)
 
     else:
-        global maze_cells
+        # global maze_cells
         maze = np.load(maze_file_path, allow_pickle=False, fix_imports=True)
         maze_cells = np.zeros((maze.shape[0], maze.shape[1], 2), dtype=int)
         for i in range(maze.shape[0]):
@@ -33,10 +33,12 @@ def load_maze(maze_file_path='mazes/final.npy'):
                 maze_cells[i][j][1] = 0
                 # initialized to 0 denoting no fire
 
+    return maze_cells
+
 
 # get local 3*3 information centered at (x,y).
-def get_local_maze_information(x, y):
-    global maze_cells
+def get_local_maze_information(maze_cells, x, y):
+    # global maze_cells
     random_location = random.choice(flag_list)
     around = np.zeros((3, 3, 2), dtype=int)
     for i in range(maze_cells.shape[0]):
@@ -61,4 +63,5 @@ def get_local_maze_information(x, y):
                 ran_time = random.choice(time_list)
                 around[i][j][1] = ran_time + around[i][j][1]
                 maze_cells[x - 1 + i][y - 1 + j][1] = around[i][j][1]
-    return around
+
+    return (maze_cells, around)

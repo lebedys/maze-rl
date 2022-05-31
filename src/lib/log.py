@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 
+def str_agent_params()
+
 def log_agent(agent, epoch: int, log_dir: str = 'log/') -> None:
     # get absolute directory path
     log_dir_path = os.path.abspath(log_dir)
