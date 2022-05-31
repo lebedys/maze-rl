@@ -6,9 +6,35 @@ import numpy as np
 from src.agent.agent import Agent, Direction
 
 
+def cell_to_str(cell: np.ndarray) -> str:
+    cell_str = ' '
+    if cell[0] == 0.0:
+        cell_str = 'W'  # wall
+    elif cell[1] > 0:
+        cell_str = str(int(cell[1]))  # fire
+    return cell_str
+
+
 def observation_to_str(observation: np.ndarray) -> str:
+    # todo - parametrize for any observation size
     # todo - parse and beautify
-    return str(observation)
+    observation_str = '''
+                        |{a_00}|{a_01}|{a_02}|
+                        |{a_10}|{a_11}|{a_12}|
+                        |{a_20}|{a_21}|{a_22}|
+    '''.format(
+        a_11='X',  # agent
+        # observation cells:
+        a_00=cell_to_str(observation[0, 0, :]),
+        a_01=cell_to_str(observation[0, 1, :]),
+        a_02=cell_to_str(observation[0, 2, :]),
+        a_10=cell_to_str(observation[1, 0, :]),
+        a_12=cell_to_str(observation[1, 2, :]),
+        a_20=cell_to_str(observation[2, 0, :]),
+        a_21=cell_to_str(observation[2, 1, :]),
+        a_22=cell_to_str(observation[2, 2, :]),
+    )
+    return observation_str
 
 
 def params_to_str(agent: Agent) -> str:
@@ -78,6 +104,7 @@ def history_to_str(agent: Agent) -> str:
 
     return history_str
 
+
 # todo - allow logging to chosen file
 def log_agent(agent: Agent, epoch: int,
               log_dir: str = 'log/',
@@ -98,7 +125,7 @@ def log_agent(agent: Agent, epoch: int,
     log_file_path = os.path.join(log_dir_path, log_file_name)
 
     # string representations of epoch information:
-        # todo - rewards (and other params)
+    # todo - rewards (and other params)
     agent_params = params_to_str(agent)
     agent_hyperparams = hyper_params_to_str(agent)
     agent_history = history_to_str(agent)

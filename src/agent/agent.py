@@ -99,6 +99,7 @@ class Agent:
             'q_values': None,
             'action': None,
             'is_random_choice': None,
+            'next_position': None,
             'is_finished': None,
             'learning_rate': None,
             'discount_factor': None,
@@ -135,6 +136,7 @@ class Agent:
             'q_values': np.empty(shape=(max_steps, 5), dtype=float),
             'action': np.empty(shape=(max_steps), dtype=Direction),
             'is_random_choice': np.empty(shape=(max_steps), dtype=bool),
+            'next_position': np.empty(shape=(max_steps, 2), dtype=int),
             'is_finished': np.empty(shape=(max_steps), dtype=bool),
             'learning_rate': np.empty(shape=(max_steps), dtype=bool),
             'discount_factor': np.empty(shape=(max_steps), dtype=bool),
@@ -190,13 +192,6 @@ class Agent:
              reverse_discount_factor: float = 0.9
              ) -> bool:  # random exploration probability
 
-        self.history['learning_rate'][self.step_count] = learning_rate
-        self.history['discount_factor'][self.step_count] = discount_factor
-        self.history['epsilon'][self.step_count] = exploration_epsilon
-
-        self.history['reverse_learning_rate'][self.step_count] = reverse_learning_rate
-        self.history['reverse_discount_factor'][self.step_count] = reverse_discount_factor
-
         reward = self.rewards['step_taken']  # initialize reward
 
         # decompose positions into row, col
@@ -207,7 +202,7 @@ class Agent:
         # check if maze completed
         if self.is_finished():
             # todo
-            # self.history['is_finished'][self.step_count] = True
+            self.history['is_finished'][self.step_count] = True
             return True
 
         # select Q(s) vector:
@@ -318,6 +313,22 @@ class Agent:
                 self.Q[next_row, next_col, reverse_chosen_direction] = new_reverse_q_value
 
         # ---------------
+        #   LOG HISTORY
+        # ---------------
+
+        # action
+        self.history['action'][self.step_count] = chosen_direction
+        self.history['is_random_choice'][self.step_count] = is_random_choice
+        self.history['next_position'][self.step_count] = np.array([next_row, next_col])
+
+        # hyper-parameters
+        self.history['learning_rate'][self.step_count] = learning_rate
+        self.history['discount_factor'][self.step_count] = discount_factor
+        self.history['epsilon'][self.step_count] = exploration_epsilon
+        self.history['reverse_learning_rate'][self.step_count] = reverse_learning_rate
+        self.history['reverse_discount_factor'][self.step_count] = reverse_discount_factor
+
+        # ---------------
         # UPDATE POSITION
         # ---------------
 
@@ -332,6 +343,7 @@ class Agent:
         return False
 
     def truncate_history(self, final_steps):  # truncate if finished before max_steps
+        # todo - truncate all
         self.history['position'] = self.history['position'][:final_steps + 1, :]
         self.history['observation'] = self.history['observation'][:final_steps + 1, :, :, :]
         self.history['q_values'] = self.history['q_values'][:final_steps + 1, :]
