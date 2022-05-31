@@ -4,7 +4,7 @@ from matplotlib.colors import ListedColormap
 import display.display as dp
 
 from config import MAZE_PATH, ENABLE_FAST_READ_MAZE
-from config import NUMPY_SEED
+from config import RANDOM_SEED
 from config import EVAL_POSITION_HISTORY_COLOR, WALL_COLOR, PATH_COLOR, FIRE_COLOR
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading

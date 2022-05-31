@@ -2,9 +2,9 @@ import os
 import numpy as np
 import random
 
-from src.config import NUMPY_SEED
+from src.config import RANDOM_SEED
 
-random.seed(NUMPY_SEED)
+random.seed(RANDOM_SEED)
 
 flag_list = [0, 1, 2, 3, 5, 6, 7, 8]
 #  [0, 1, 2

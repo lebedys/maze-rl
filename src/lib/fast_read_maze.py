@@ -6,10 +6,10 @@ import random
 
 from enum import Enum
 
-from src.config import NUMPY_SEED
+from src.config import RANDOM_SEED
 
-random.seed(NUMPY_SEED)  # set seed from config file
-np.random.seed(NUMPY_SEED)
+random.seed(RANDOM_SEED)  # set seed from config file
+np.random.seed(RANDOM_SEED)
 
 flag_list_mapping = {  # currently unused (here for future optimization)
     0: (0, 0),

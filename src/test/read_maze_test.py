@@ -6,7 +6,7 @@ import random
 
 import time
 
-from src.config import NUMPY_SEED
+from src.config import RANDOM_SEED
 # NUMPY_SEED = 1234
 
 # from src.lib.read_maze import maze_cells
@@ -42,8 +42,8 @@ if __name__ == '__main__':
 
     iterations = 10_000
 
-    np.random.seed(NUMPY_SEED)
-    random.seed(NUMPY_SEED)
+    np.random.seed(RANDOM_SEED)
+    random.seed(RANDOM_SEED)
 
     maze_cells = rm.load_maze('../mazes/final.npy')
 
@@ -55,8 +55,8 @@ if __name__ == '__main__':
 
     rm_maze_cells = maze_cells.copy()
 
-    np.random.seed(NUMPY_SEED)
-    random.seed(NUMPY_SEED)
+    np.random.seed(RANDOM_SEED)
+    random.seed(RANDOM_SEED)
 
     maze_cells = frm.load_maze('../mazes/final.npy')
 

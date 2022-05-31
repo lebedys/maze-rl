@@ -13,7 +13,7 @@ import display.display as dp
 import numpy as np
 
 from config import MAZE_PATH, ENABLE_FAST_READ_MAZE
-from config import NUMPY_SEED
+from config import RANDOM_SEED
 from config import TRAIN_POSITION_HISTORY_COLOR, EVAL_POSITION_HISTORY_COLOR, WALL_COLOR, PATH_COLOR, FIRE_COLOR
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading
@@ -99,9 +99,9 @@ if __name__ == '__main__':
 
     # trained_agent, train_mazes, eval_mazes = \
     train_agent(a0, num_epochs=10,
-                max_train_steps=100_000,
-                max_eval_steps=100_000,
-                log_train=False,
+                max_train_steps=1000_000,
+                max_eval_steps=1000_000,
+                log_train=True,
                 log_eval=True
                 )
 
