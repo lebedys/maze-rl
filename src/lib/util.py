@@ -31,4 +31,4 @@ def is_wall(cell) -> bool:
 
 
 def is_fire(cell) -> bool:
-    return False
+    return cell > 0

@@ -37,7 +37,8 @@ def eval_agent(agent: Agent,
 
 def train_agent(agent: Agent,
                 num_epochs: int = 1,
-                max_steps: int = 1_000_000,
+                max_eval_steps: int = 100_000,
+                max_train_steps: int = 1_000_000,
                 eval: bool = True,  # evaluate
                 plot: bool = True,  # plot path
                 log: bool = True,  # log history
@@ -50,48 +51,57 @@ def train_agent(agent: Agent,
     for epoch in range(num_epochs):
         # train agent:
         train_maze = rm.load_maze(MAZE_PATH)
-        train_maze = a0.train(maze=train_maze, max_steps=max_steps)
+        train_maze = a0.train(maze=train_maze, max_steps=max_train_steps)
         train_mazes.append(train_maze.copy())
 
-        log_agent(a0, epoch=epoch)  # log full epoch history
+        if log:
+            log_agent(a0, epoch=epoch)  # log full epoch history
 
         print('--- exited training epoch={}.'.format(epoch))
 
-        # todo - move plotting out of here
-        fig, ax = plt.subplots()
-        dp.plot_maze_walls(maze_walls,
-                           ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
+        if plot:
+            # todo - move plotting out of here
+            fig, ax = plt.subplots()
+            dp.plot_maze_walls(maze_walls,
+                               ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
 
-        train_path = a0.history['position']
-        dp.plot_agent_path(train_path, shape=maze_shape,
-                           ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
+            train_path = a0.history['position']
+            dp.plot_agent_path(train_path, shape=maze_shape,
+                               ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
 
-        ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
+            ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
 
-        plt.show()
+            plt.show()
 
         print('plotted epoch={}'.format(epoch))
 
-        # eval agent:
-        eval_maze = rm.load_maze(MAZE_PATH)
-        eval_maze = a0.eval(maze=eval_maze, max_steps=max_steps)
-        eval_mazes.append(eval_maze.copy())
+        if eval:
+            # eval agent:
+            eval_maze = rm.load_maze(MAZE_PATH)
+            eval_maze = a0.eval(maze=eval_maze, max_steps=max_eval_steps)
+            eval_mazes.append(eval_maze.copy())
 
-        fig, ax = plt.subplots()
-        dp.plot_maze_walls(maze_walls,
-                           ax=ax,
-                           cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
-                           )
+            if log:
+                log_agent(a0, epoch=epoch)  # log full epoch history
 
-        eval_path = a0.history['position']
-        dp.plot_agent_path(eval_path, shape=maze_shape,
-                           ax=ax,
-                           cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
-                           )
+            if plot:
+                fig, ax = plt.subplots()
+                dp.plot_maze_walls(maze_walls,
+                                   ax=ax,
+                                   cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
+                                   )
 
-        ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
+                eval_path = a0.history['position']
+                dp.plot_agent_path(eval_path, shape=maze_shape,
+                                   ax=ax,
+                                   cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
+                                   )
 
-        plt.show()
+                ax.set_title('epoch={}, steps={}'.format(epoch, a0.step_count))
+
+                plt.show()
+
+    print(a0.Q)
 
     return a0, train_mazes, eval_mazes
 
@@ -105,7 +115,11 @@ if __name__ == '__main__':
     )
 
     # trained_agent, train_mazes, eval_mazes = \
-    train_agent(a0, num_epochs=2, max_steps=1000)
+    train_agent(a0, num_epochs=10,
+                max_train_steps=100_000,
+                max_eval_steps=100_000,
+                log=False,
+                )
 
 # todo - penalize path length at end of epoch
 #      - use this to update policy (q-table) somehow

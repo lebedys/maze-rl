@@ -24,7 +24,7 @@ REWARDS = {
 
     # obstacles:
     'wall': -1.0,  # hit wall
-    'fire': -1.0,  # hit fire
+    'fire': -0.0,  # hit fire
 
     # movement:
     'step_taken': -0.,  # take step in any direction
@@ -32,7 +32,7 @@ REWARDS = {
 
     # backtracking:
     'repeat_step': -0.5,  # reverse last action # todo - needs better name
-    'revisited': -0.05,  # revisit previously-visited node
+    'revisited': -0.0,  # revisit previously-visited node
     'unvisited': 0.,  # todo - reward unvisited
 
     # distance metrics:
