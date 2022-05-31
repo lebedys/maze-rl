@@ -8,9 +8,10 @@ from src.lib.util import is_fire, is_wall, euclidian_cost
 from src.config import *
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading
-    import lib.fast_read_maze as rm
+    import src.lib.fast_read_maze as rm
 else:
-    import lib.read_maze as rm
+    import src.lib.read_maze as rm
+
 
 # todo - implement periodic logging
 
@@ -32,6 +33,7 @@ directions = np.array(
     [Direction.NONE, Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
 )
 
+
 class Agent:
 
     def __init__(self,
@@ -49,8 +51,8 @@ class Agent:
 
                  # hyper-parameters:
                  learning_rate: float = 0.1,  # q-table learning rate
-                 discount: float = 0.9,  # discount factor
-                 exploration_epsilon: float = 0.15  # probability of random exploration
+                 discount: float = 0.99,  # discount factor
+                 exploration_epsilon: float = 0.1  # probability of random exploration
                  ):
 
         self.start_position = np.array(list(start_position), dtype=int)
@@ -78,14 +80,24 @@ class Agent:
         self.previous_position = np.array([0, 0])
         self.previous_q_index = Direction.NONE
 
-        # store history:
-        self.history = {}
-        # todo - log action, position, epsilon random choice, step count, epoch, metadata
+        # todo - replay buffer:
+        #           - store N previous steps in stack
+        #           - penalize backtracking through rollback
+
+        # empty history:
+        self.history = {
+            'position': None,
+            'observation': None,
+            'q_values': None,
+            'action': None,
+            'is_random_choice': None,
+            'is_finished': None,
+        }
 
         if self.Q is None:  # if no Q-table provided
             self.init_q_table(width, height, n_actions)
 
-    def init_q_table(self, width:int, height:int, n_actions:int) -> None:
+    def init_q_table(self, width: int, height: int, n_actions: int) -> None:
         self.Q = np.full((width, height, n_actions), 0.)
 
         # random normal initial values:
@@ -100,6 +112,19 @@ class Agent:
             0,  # LEFT
         ])
 
+    def reset_history(self, max_steps: int) -> None:
+        # run_path = np.empty(shape=(max_steps + 1, 2), dtype=int)
+        # run_path[0, :] = self.position  # add initial position
+
+        self.history = {
+            'position': np.empty(shape=(max_steps + 1, 2), dtype=int),
+            'observation': np.empty(shape=(max_steps + 1, 3, 3, 2), dtype=int),
+            'q_values': np.empty(shape=(max_steps + 1, 5), dtype=float),
+            'action': np.empty(shape=(max_steps + 1), dtype=Direction),
+            'is_random_choice': np.empty(shape=(max_steps + 1), dtype=bool),
+            'is_finished': np.empty(shape=(max_steps + 1), dtype=bool),
+        }
+
     def reset_position(self) -> None:
         self.position = np.copy(self.start_position)  # initial position
         self.step_count = 0
@@ -113,10 +138,12 @@ class Agent:
         #  [3, 4, 5],
         #  [6, 7, 8]]
 
-        row, col = self.position
-        return maze[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1]
+        # todo - log observation
 
-        # todo - implement fires
+        row, col = self.position
+        observation = rm.get_local_maze_information(row, col)
+        # return maze[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1]
+        return observation
 
     def invalidate_walls(self, q_values: np.ndarray, walls: np.ndarray, fires: np.ndarray) -> np.ndarray:
 
@@ -133,7 +160,7 @@ class Agent:
     def step(self,
              walls: np.ndarray,  # local observation of walls
              fires: np.ndarray,  # local observation of fires
-             train=False,  # enable training (updating Q-table)
+             train: bool = False,  # enable training (updating Q-table)
 
              # step hyperparameters:
              learning_rate: float = 0.1,
@@ -144,7 +171,7 @@ class Agent:
 
         # decompose positions into row, col
         prev_row, prev_col = self.previous_position  # previous position
-        current_row, current_col = self.position     # current position
+        current_row, current_col = self.position  # current position
 
         # -----------------------
         # check if maze completed
@@ -196,7 +223,7 @@ class Agent:
             reward = self.rewards['finish']
         else:
             # penalize hitting obstacles:
-            if is_wall(next_cell):   # penalize wall hit
+            if is_wall(next_cell):  # penalize wall hit
                 self.wall_hit_count += 1
                 # print('hit wall at {},{}'.format(current_row, current_col))
                 reward += self.rewards['wall']
@@ -255,53 +282,87 @@ class Agent:
 
         return False
 
-    def train(self,
-              maze: np.ndarray,
-              max_steps: int = 1_000_000  # maximum training steps per epoch
-              ) -> np.ndarray:
+    def truncate_history(self, final_steps):  # truncate if finished before max_steps
+        self.history['position'] = self.history['position'][:final_steps + 2, :]
+        self.history['observation'] = self.history['observation'][:final_steps + 2, :, :, :]
+        self.history['q_values'] = self.history['q_values'][:final_steps + 2, :]
+        self.history['action'] = self.history['action'][:final_steps + 2]
+        self.history['is_random_choice'] = self.history['is_random_choice'][:final_steps + 2]
+        self.history['is_finished'] = self.history['is_finished'][:final_steps + 2]
 
-        self.reset_position()  # initialize agent
+    def run(self,
+            maze: np.ndarray,
+            train: bool = True,  # enable training
+            max_steps: int = 100_000):  # run agent
 
-        # initialize training path:
-        train_path = np.empty(shape=(max_steps + 1, 2), dtype=int)  # empty path
-        train_path[0, :] = np.copy(self.position)  # add initial position
+        self.reset_position()  # initialize position
+        self.reset_history(max_steps=max_steps)  # initialize history
 
-        for i in range(max_steps):
-            observation = self.observe(maze)  # get surrounding information
-            walls = observation
-            fires = np.array([])
+        for step in range(max_steps):
+            self.history['position'][step, :] = self.position  # store current position
 
-            is_finished = self.step(walls=walls, fires=fires, train=True)  # update position
-            train_path[i + 1, :] = np.copy(self.position)  # store new position
+            maze, observation = self.observe(maze)  # get surrounding information
+            walls = observation[:, :, 0]
+            fires = np.array([])  # observation[:, :, 1]  # todo - use fires
 
-            if is_finished:  # achieved goal?
-                train_path = train_path[:i + 2, :]  # truncate if path unfilled before returning
-                print('finished training in {} steps!'.format(self.step_count))
-                break  # end training
+            self.history['observation'][step, :, :, :] = observation  # store current observation
 
-        print('training loop broken after {} steps.'.format(self.step_count))
+            is_finished = self.step(walls=walls, fires=fires, train=train)  # update position
 
-        return train_path  # return path when finished
-
-    def run(self, maze, max_steps=10):  # run pretrained agent
-        self.reset_position()  # initialize agent
-
-        run_path = np.empty(shape=(max_steps + 1, 2), dtype=int)
-        run_path[0, :] = self.position  # add initial position
-
-        for i in range(max_steps):
-            observation = self.observe(maze)  # get surrounding information
-            walls = observation
-            fires = np.array([])
-
-            is_finished = self.step(walls=walls, fires=fires, train=False)  # update position
-            run_path[i + 1, :] = np.copy(self.position)  # store new position
+            self.history['is_finished'][step] = is_finished
+            # run_path[step + 1, :] = np.copy(self.position)  # store new position
 
             if is_finished:  # achieved goal?
-                run_path = run_path[:i + 2, :]  # truncate if path unfilled before returning
-                print('finished running in {} steps!'.format(self.step_count))
+                # todo - add final position (with N/A for other values)
+                self.truncate_history(step)
+                print('finished running in {steps} steps!'.format(steps=self.step_count))
                 break  # end training
 
         print('run loop broken after {} steps.'.format(self.step_count))
 
-        return run_path  # return path when finished
+        return maze  # return path when finished
+
+    def eval(self, maze: np.ndarray,
+             max_steps: int = 100_000,     # maximum evaluation steps per epoch
+             ):
+
+        final_maze = self.run(maze, train=False, max_steps=max_steps)
+
+        return final_maze
+
+    def train(self, maze: np.ndarray,
+              max_steps: int = 1_000_000,  # maximum training steps per epoch
+              ):
+
+        final_maze = self.run(maze, train=True, max_steps=max_steps)
+
+        return final_maze
+
+    # def train(self,
+    #           maze: np.ndarray,
+    #           max_steps: int = 1_000_000
+    #           ) -> np.ndarray:
+    #
+    #     self.reset_position()  # initialize agent
+    #
+    #     # initialize training path:
+    #     train_path = np.empty(shape=(max_steps + 1, 2), dtype=int)  # empty path
+    #     train_path[0, :] = np.copy(self.position)  # add initial position
+    #
+    #     for i in range(max_steps):
+    #         observation = self.observe(maze)  # get surrounding information
+    #         walls = observation
+    #         fires = []
+    #         # walls, fires = observation[:, :, 0], observation[:, :, 1]
+    #
+    #         is_finished = self.step(walls=walls, fires=fires, train=True)  # update position
+    #         train_path[i + 1, :] = np.copy(self.position)  # store new position
+    #
+    #         if is_finished:  # achieved goal?
+    #             train_path = train_path[:i + 2, :]  # truncate if path unfilled before returning
+    #             print('finished training in {} steps!'.format(self.step_count))
+    #             break  # end training
+    #
+    #     print('training loop broken after {} steps.'.format(self.step_count))
+    #
+    #     return train_path  # return path when finished
