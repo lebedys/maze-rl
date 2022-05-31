@@ -7,7 +7,7 @@ import random
 import time
 
 from src.config import NUMPY_SEED
-NUMPY_SEED = 1234
+# NUMPY_SEED = 1234
 
 # from src.lib.read_maze import maze_cells
 
@@ -40,7 +40,7 @@ def test_frm(maze_cells: np.ndarray,
 
 if __name__ == '__main__':
 
-    iterations = 1000
+    iterations = 10_000
 
     np.random.seed(NUMPY_SEED)
     random.seed(NUMPY_SEED)
