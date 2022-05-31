@@ -60,7 +60,7 @@ class Agent:
                  # hyper-parameters:
                  learning_rate: float = 0.3,  # q-table learning rate
                  discount: float = 0.9,  # discount factor
-                 exploration_epsilon: float = 0.0  # probability of random exploration
+                 exploration_epsilon: float = 0.  # probability of random exploration
                  ):
 
         self.start_position = np.array(list(start_position), dtype=int)
@@ -118,11 +118,11 @@ class Agent:
 
         # initial position allows only RIGHT and DOWN directions
         self.Q[1, 1, :] = np.array([
-            0,  # NONE
-            0,  # UP
-            np.random.normal(loc=0.5, scale=0.1),  # RIGHT
-            np.random.normal(loc=0.5, scale=0.1),  # DOWN
-            0,  # LEFT
+            -np.inf,  # NONE
+            -np.inf,  # UP
+            0, # np.random.normal(loc=0.5, scale=0.1),  # RIGHT
+            0, # np.random.normal(loc=0.5, scale=0.1),  # DOWN
+            -np.inf,  # LEFT
         ])
 
     def reset_history(self, max_steps: int) -> None:
@@ -181,13 +181,13 @@ class Agent:
              train: bool = False,  # enable training (updating Q-table)
 
              # hyper-parameters:
-             exploration_epsilon: float = 0.1,
+             exploration_epsilon: float = 0.,
              learning_rate: float = 0.1,
              discount_factor: float = 0.9,
 
              # reverse hyper-parameters:
              reverse_learning_rate: float = 0.1,
-             reverse_discount_factor: float = 0.5
+             reverse_discount_factor: float = 0.9
              ) -> bool:  # random exploration probability
 
         self.history['learning_rate'][self.step_count] = learning_rate
@@ -200,7 +200,7 @@ class Agent:
         reward = self.rewards['step_taken']  # initialize reward
 
         # decompose positions into row, col
-        prev_row, prev_col = self.previous_position  # previous position
+        # prev_row, prev_col = self.previous_position  # previous position
         current_row, current_col = self.position  # current position
 
         # -----------------------
@@ -227,8 +227,8 @@ class Agent:
         else:
             max_q_indeces = np.argwhere(q_values == np.amax(q_values))
             max_q_indeces = [e[0] for e in max_q_indeces]
-            # chosen_q_index = np.random.choice(max_q_indeces)  # select index of highest q-value
-            chosen_q_index = np.argmax(q_values)
+            chosen_q_index = np.random.choice(max_q_indeces)  # select index of highest q-value
+            # chosen_q_index = np.argmax(q_values)
 
         chosen_direction = Direction(chosen_q_index)  # choose corresponding direction
         reverse_chosen_direction = get_reverse_direction(chosen_direction)
@@ -263,8 +263,8 @@ class Agent:
             # reward += self.rewards['fire']
             # print('hit fire at {},{}'.format(current_row, current_col))
             next_row, next_col = current_row, current_col  # revert position
-            reward = self.rewards['fire']
-            # todo - consider waiting here
+            # reward = self.rewards['fire']
+            # todo - better fire policy
         else:
 
             if (np.array([next_row, next_col]) == self.end_position).all():
@@ -321,8 +321,8 @@ class Agent:
         # UPDATE POSITION
         # ---------------
 
-        self.previous_position = np.copy(self.position)  # update memory of previous position
-        self.previous_q_index = chosen_q_index
+        # self.previous_position = np.copy(self.position)  # update memory of previous position
+        # self.previous_q_index = chosen_q_index
 
         self.position = np.array([next_row, next_col])  # update position
 

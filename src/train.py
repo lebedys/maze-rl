@@ -41,7 +41,8 @@ def train_agent(agent: Agent,
                 max_train_steps: int = 1_000_000,
                 eval: bool = True,  # evaluate
                 plot: bool = True,  # plot path
-                log: bool = True,  # log history
+                log_train: bool = True,  # log history
+                log_eval: bool = True
                 ):
     print('Starting Training')
 
@@ -54,7 +55,7 @@ def train_agent(agent: Agent,
         train_maze = a0.train(maze=train_maze, max_steps=max_train_steps)
         train_mazes.append(train_maze.copy())
 
-        if log:
+        if log_train:
             log_agent(a0, epoch=epoch)  # log full epoch history
 
         print('--- exited training epoch={}.'.format(epoch))
@@ -81,7 +82,7 @@ def train_agent(agent: Agent,
             eval_maze = a0.eval(maze=eval_maze, max_steps=max_eval_steps)
             eval_mazes.append(eval_maze.copy())
 
-            if log:
+            if log_eval:
                 log_agent(a0, epoch=epoch)  # log full epoch history
 
             if plot:
@@ -101,8 +102,6 @@ def train_agent(agent: Agent,
 
                 plt.show()
 
-    print(a0.Q)
-
     return a0, train_mazes, eval_mazes
 
 
@@ -118,7 +117,8 @@ if __name__ == '__main__':
     train_agent(a0, num_epochs=10,
                 max_train_steps=100_000,
                 max_eval_steps=100_000,
-                log=False,
+                log_train=False,
+                log_eval=True
                 )
 
 # todo - penalize path length at end of epoch
