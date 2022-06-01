@@ -55,6 +55,9 @@ N_ACTIONS = 5
 # ------------------
 
 PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
+# todo - make absolute out of above
+
+USE_OPTIMAL_POLICY = False  # use optimal training policy
 
 TRAIN_MAX_STEPS = 500_000
 EVAL_MAX_STEPS = 100_000
