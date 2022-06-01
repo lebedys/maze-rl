@@ -18,6 +18,8 @@ if ENABLE_FAST_READ_MAZE:  # faster maze reading
 else:
     import lib.read_maze as rm
 
+from config import RANDOM_SEED
+
 # sample mazes:
 walls_201 = rm.load_maze('./mazes/final.npy')[:, :, 0]
 walls_9 = src.mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
@@ -63,12 +65,14 @@ def train_optimal(agent: Agent,
         print('plotted epoch={}'.format(epoch))
 
         if eval:  # evaluate after every epoch
+            np.random.seed(RANDOM_SEED)
             step_counts, eval_mazes = eval_agent(agent=agent,
                                                  max_eval_steps=max_eval_steps,
                                                  log_eval=log_eval,
                                                  log_file='eval_optimal_epoch{}'.format(epoch),
                                                  plot=plot,
-                                                 num_epochs=num_eval_epochs)
+                                                 num_epochs=num_eval_epochs,
+                                                 training_epoch=epoch)
 
             eval_step_counts[epoch, :] = step_counts
 

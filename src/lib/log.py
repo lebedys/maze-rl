@@ -106,29 +106,34 @@ def history_to_str(agent: Agent) -> str:
 # todo - allow logging to chosen file
 def log_agent(agent: Agent, epoch: int,
               log_dir: str = 'log/',
-              log_file_name: str = None) -> None:
+              log_file_name: str = None,
+              q_file_name: str = None) -> None:
     # get absolute directory path
     log_dir_path = os.path.abspath(log_dir)
     if not os.path.exists(log_dir_path):
         os.makedirs(log_dir_path)
 
-    if not log_file_name:  # no log file name provided
-        # file uses date/time to generate unique name
-        datetime_obj = datetime.now()
-        time_stamp = datetime_obj.strftime("%Y%d%m_%H%M%S")
+    # file uses date/time to generate unique name
+    datetime_obj = datetime.now()
+    time_stamp = datetime_obj.strftime("%Y%d%m_%H%M%S")
 
-        # generate file name:
-        log_file_name = 'log_' + time_stamp + '.log'
+    if not log_file_name:  # no log file name provided
+        # generate log file name:
+        log_file_name = 'log' + '_e{}_'.format(epoch) + time_stamp + '.log'
 
     log_file_path = os.path.join(log_dir_path, log_file_name)
 
+    if not q_file_name:  # no q-table file name provided
+        # generate q-table file name:
+        q_file_name = 'q' + '_e{}_'.format(epoch) + time_stamp + '.npy'
+
+    q_file_path = os.path.join(log_dir_path, q_file_name)
+    np.save(file=q_file_path, arr=agent.Q, allow_pickle=False)
+
     # string representations of epoch information:
-    # todo - rewards (and other params)
     agent_params = params_to_str(agent)
     agent_hyperparams = hyper_params_to_str(agent)
     agent_history = history_to_str(agent)
-
-    # todo - generate strings above
 
     # appending is used to prevent accidental deletion
     with open(log_file_path, 'a+') as f:

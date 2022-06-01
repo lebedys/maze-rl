@@ -1,11 +1,12 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import display.display as dp
 
 from config import MAZE_PATH, ENABLE_FAST_READ_MAZE
 from config import RANDOM_SEED
-from config import EVAL_POSITION_HISTORY_COLOR, WALL_COLOR, PATH_COLOR, FIRE_COLOR
+from config import PRETRAINED_Q_PATH
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading
     import lib.fast_read_maze as rm
@@ -22,8 +23,8 @@ def eval_agent(agent: Agent,
                max_eval_steps: int = 100_000,
                plot: bool = True,
                log_eval: bool = True,
-               log_file: str = None):
-
+               log_file: str = None,
+               training_epoch: int = 0):
     eval_mazes = []
     step_counts = np.empty((num_epochs))  # store step_counts
 
@@ -35,7 +36,8 @@ def eval_agent(agent: Agent,
         eval_mazes.append(eval_maze.copy())
 
         if log_eval:
-            log_agent(agent, epoch=epoch, log_file_name='{root}_{epoch}'.format(root=log_file, epoch=epoch))  # log full epoch history
+            log_agent(agent, epoch=training_epoch,
+                      log_file_name='{root}_{epoch}'.format(root=log_file, epoch=epoch))  # log full epoch history
 
         if plot:
             dp.plot_eval(agent=agent, epoch=epoch, maze=eval_maze)
@@ -44,7 +46,17 @@ def eval_agent(agent: Agent,
 
     return step_counts, eval_mazes
 
+
+def eval_pretrained(file_path: str) -> None:
+    # todo - use pretrained weights
+    agent_pretrained = Agent()
+
+
 if __name__ == '__main__':
-    # todo - load pretrained weights
-    # agent_pretrained = Agent()
-    pass
+
+    abs_pretrained_q_path = os.path.abspath(PRETRAINED_Q_PATH)
+
+    try:
+        maze = np.load(abs_pretrained_q_path, allow_pickle=False, fix_imports=True)
+    except OSError:
+        print('File {f} does not exist'.format(f=abs_pretrained_q_path))

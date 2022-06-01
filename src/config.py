@@ -47,6 +47,7 @@ MEAN_EVAL_PERFORMANCE_COLOR = EVAL_POSITION_HISTORY_COLOR
 
 MAZE_PATH = './mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze # TODO -RENAME
 
+
 ENABLE_FIRES = True  # enable dynamic fires
 
 ENABLE_FAST_READ_MAZE = True  # enable faster implementation of read_maze algorithm
@@ -60,7 +61,7 @@ N_ACTIONS = 5
 #  AGENT
 # ------------------
 
-# PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
+PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
 # todo - allow importing pretrained agent
 
 USE_OPTIMAL_POLICY = True  # use optimal training policy - (leave this True)
