@@ -39,21 +39,7 @@ def eval_agent(agent: Agent,
         maze_shape = maze_walls.shape
 
         if plot:
-            fig, ax = plt.subplots()
-            dp.plot_maze_walls(maze_walls,
-                               ax=ax,
-                               cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
-                               )
-
-            eval_path = agent.history['position']
-            dp.plot_agent_path(eval_path, shape=maze_shape,
-                               ax=ax,
-                               cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
-                               )
-
-            ax.set_title('epoch={}, steps={}'.format(epoch, agent.step_count))
-
-            plt.show()
+            dp.plot_eval(agent=agent, epoch=epoch, maze=eval_maze)
 
     return eval_mazes
 

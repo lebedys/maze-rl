@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import ListedColormap
 
-from src.config import PATH_COLOR, WALL_COLOR, TRAIN_POSITION_HISTORY_COLOR
+from src.config import PATH_COLOR, WALL_COLOR, TRAIN_POSITION_HISTORY_COLOR, EVAL_POSITION_HISTORY_COLOR
 from src.agent.agent import Agent
+
 
 def plot_training(agent: Agent, epoch: int, maze: np.ndarray):
     # if ax is None:
@@ -11,16 +12,37 @@ def plot_training(agent: Agent, epoch: int, maze: np.ndarray):
 
     maze_walls = maze[:, :, 0]
     maze_shape = maze_walls.shape
-    # todo - move plotting out of here
+
     fig, ax = plt.subplots()
     plot_maze_walls(maze_walls,
-                       ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
+                    ax=ax, cmap=ListedColormap([PATH_COLOR, WALL_COLOR]))
 
     train_path = agent.history['position']
     plot_agent_path(train_path, shape=maze_shape,
-                       ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
+                    ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
 
     ax.set_title('TRAINING - epoch={}, steps={}'.format(epoch, agent.step_count))
+
+    plt.show()
+
+
+def plot_eval(agent: Agent, epoch: int, maze: np.ndarray):
+    maze_walls = maze[:, :, 0]
+    maze_shape = maze_walls.shape
+
+    fig, ax = plt.subplots()
+    plot_maze_walls(maze_walls,
+                    ax=ax,
+                    cmap=ListedColormap([PATH_COLOR, WALL_COLOR])
+                    )
+
+    eval_path = agent.history['position']
+    plot_agent_path(eval_path, shape=maze_shape,
+                    ax=ax,
+                    cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
+                    )
+
+    ax.set_title('EVALUATION - steps={steps}'.format(steps=agent.step_count))
 
     plt.show()
 
