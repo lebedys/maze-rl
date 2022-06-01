@@ -10,7 +10,7 @@ import display.display as dp
 
 import numpy as np
 
-from config import MAZE_PATH, ENABLE_FAST_READ_MAZE, USE_OPTIMAL_POLICY, ENABLE_PLOTTING
+from config import MAZE_PATH, ENABLE_FAST_READ_MAZE, USE_OPTIMAL_POLICY, ENABLE_PATH_PLOTTING, ENABLE_RESULTS_PLOTTING
 from config import TRAIN_MAX_STEPS, EVAL_MAX_STEPS, NUM_EPOCHS, NUM_EVAL_EPOCHS
 
 if ENABLE_FAST_READ_MAZE:  # faster maze reading
@@ -30,7 +30,7 @@ def train_optimal(agent: Agent,
                   max_train_steps: int = TRAIN_MAX_STEPS,
                   eval: bool = True,  # evaluate
                   num_eval_epochs: int = NUM_EVAL_EPOCHS,  # evaluation epoch number
-                  plot: bool = ENABLE_PLOTTING,  # plot path
+                  plot: bool = ENABLE_PATH_PLOTTING,  # plot path
                   log_train: bool = True,  # log history
                   log_eval: bool = True
                   ):
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
         optimal_agent, train_steps, eval_steps = train_optimal(optimal_agent)
 
-        if ENABLE_PLOTTING:
+        if ENABLE_RESULTS_PLOTTING:
             dp.plot_results(num_epochs=NUM_EPOCHS, num_eval_epochs=NUM_EVAL_EPOCHS,
                             train_steps=train_steps, eval_steps=eval_steps)
     else:

@@ -3,29 +3,41 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 from typing import List
 
+from src.config import RANDOM_SEED
+
 from src.config import PATH_COLOR, WALL_COLOR, TRAIN_POSITION_HISTORY_COLOR, EVAL_POSITION_HISTORY_COLOR
+from src.config import EVAL_PERFORMANCE_COLOR, MEAN_EVAL_PERFORMANCE_COLOR, TRAIN_PERFORMANCE_COLOR
 from src.agent.agent import Agent
 
 
 def plot_results(num_epochs: int, num_eval_epochs: int,
                  train_steps: np.ndarray, eval_steps: np.ndarray) -> None:
 
-    mean_eval_steps = eval_steps.mean(axis=0)  # todo - check
+    mean_eval_steps = eval_steps.mean(axis=1)  # todo - check
+
+    training_epochs = list(range(num_epochs))
+    eval_epochs = list(range(num_eval_epochs))
 
     fig, ax = plt.subplots()
 
-    # todo - plot training vs epoch
-    # todo - plot mean eval
-    # TODO SHOW SEED
+    ax.plot(training_epochs, train_steps, label='training', color=TRAIN_PERFORMANCE_COLOR)
+    ax.plot(training_epochs, mean_eval_steps, label='mean evaluation ({} epochs)'.format(num_eval_epochs), color=MEAN_EVAL_PERFORMANCE_COLOR)
+
+    ax.set_title('Model Performance (seed={seed})'.format(seed=RANDOM_SEED))
+    ax.set_ylabel('Agent Step Count')
+    ax.set_xlabel('Epoch')
+    ax.legend()
 
     plt.show()
 
     fig, ax = plt.subplots()
 
+    for eval_epoch in range(num_eval_epochs):
+        ax.plot(training_epochs, eval_steps[:, eval_epoch], label='epoch {}'.format(eval_epoch),
+                color=EVAL_PERFORMANCE_COLOR, alpha=0.5,)
 
-    for epoch in num_eval_epochs:
-
-        pass  # todo - plot all eval results on one
+    ax.plot(training_epochs, mean_eval_steps, label='mean evaluation ({} epochs)'.format(num_eval_epochs),
+            color=MEAN_EVAL_PERFORMANCE_COLOR, ls='--')
 
     plt.show()
 
@@ -45,7 +57,7 @@ def plot_training(agent: Agent, epoch: int, maze: np.ndarray) -> None:
     plot_agent_path(train_path, shape=maze_shape,
                     ax=ax, cmap=ListedColormap(['none', TRAIN_POSITION_HISTORY_COLOR]))
 
-    ax.set_title('TRAINING - epoch={}, steps={}'.format(epoch, agent.step_count))
+    ax.set_title('TRAINING - epoch={epoch}, steps={steps} (seed={seed})'.format(epoch=epoch, steps=agent.step_count, seed=RANDOM_SEED))
 
     plt.show()
 
@@ -66,7 +78,7 @@ def plot_eval(agent: Agent, epoch: int, maze: np.ndarray) -> None:
                     cmap=ListedColormap(['none', EVAL_POSITION_HISTORY_COLOR])
                     )
 
-    ax.set_title('EVALUATION - steps={steps}'.format(steps=agent.step_count))
+    ax.set_title('EVALUATION - steps={steps} (seed={seed})'.format(steps=agent.step_count, seed=RANDOM_SEED))
 
     plt.show()
 

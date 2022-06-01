@@ -25,7 +25,8 @@ LOG_FILE = 'final.log'  # set to None for unique file names
 # DISPLAY / PLOTTING
 # ------------------
 
-ENABLE_PLOTTING = True  # plot agent path
+ENABLE_PATH_PLOTTING = False  # plot agent path
+ENABLE_RESULTS_PLOTTING = True  # plot performance results
 
 # WORLD COLORS:
 WALL_COLOR = '#eeeeee'
@@ -35,6 +36,10 @@ FIRE_COLOR = 'red'
 # AGENT COLORS:
 TRAIN_POSITION_HISTORY_COLOR = 'orange'
 EVAL_POSITION_HISTORY_COLOR = 'blue'
+
+TRAIN_PERFORMANCE_COLOR = TRAIN_POSITION_HISTORY_COLOR
+EVAL_PERFORMANCE_COLOR = EVAL_POSITION_HISTORY_COLOR
+MEAN_EVAL_PERFORMANCE_COLOR = EVAL_POSITION_HISTORY_COLOR
 
 # ------------------
 #  WORLD PARAMETERS
