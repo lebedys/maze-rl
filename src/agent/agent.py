@@ -15,12 +15,9 @@ else:
     import src.lib.read_maze as rm
 
 
-# todo - implement periodic logging
-
-# directionality:
-# [0, 1, 2
-#  3, 4, 5
-#  6, 7, 8]
+# ------------------
+#  ACTION DIRECTIONS
+# ------------------
 
 class Direction(IntEnum):
     UP = 1
@@ -43,8 +40,14 @@ reverse_direction_mapping = {
 def get_reverse_direction(direction: Direction):
     return reverse_direction_mapping[direction]
 
+# -------------------------------------------------
+
 
 class Agent:
+
+    # ------------------
+    #    AGENT CLASS
+    # ------------------
 
     def __init__(self,
                  start_position: Tuple[int, int] = (1, 1),  # initial position
@@ -86,13 +89,9 @@ class Agent:
         # hashmap of visited nodes:
         self.visited = defaultdict(int)
 
-        # memory of previous step:
-        self.previous_position = np.array([0, 0])
-        self.previous_q_index = Direction.NONE
-
-        # todo - replay buffer:
-        #           - store N previous steps in stack
-        #           - penalize backtracking through rollback
+        # # memory of previous step:
+        # self.previous_position = np.array([0, 0])
+        # self.previous_q_index = Direction.NONE
 
         # empty history:
         self.history = {
@@ -116,21 +115,16 @@ class Agent:
     def init_q_table(self, width: int, height: int, n_actions: int) -> None:
         self.Q = np.full((width, height, n_actions), 0.)
 
-        # random normal initial values:
-        # self.Q = 0.5 * np.random.normal(loc=0.5, scale=0.1, size=(WIDTH, HEIGHT, N_ACTIONS))
-
-        # initial position allows only RIGHT and DOWN directions
+        # initial position allows only NONE, RIGHT, and DOWN directions
         self.Q[1, 1, :] = np.array([
-            -np.inf,  # NONE
+            0,        # NONE
             -np.inf,  # UP
-            0, # np.random.normal(loc=0.5, scale=0.1),  # RIGHT
-            0, # np.random.normal(loc=0.5, scale=0.1),  # DOWN
+            0,        # RIGHT
+            0,        # DOWN
             -np.inf,  # LEFT
         ])
 
     def reset_history(self, max_steps: int) -> None:
-        # run_path = np.empty(shape=(max_steps + 1, 2), dtype=int)
-        # run_path[0, :] = self.position  # add initial position
 
         self.history = {
             'position': np.empty(shape=(max_steps, 2), dtype=int),
@@ -155,16 +149,13 @@ class Agent:
     def is_finished(self) -> bool:
         return (self.position == self.end_position).all()
 
-    def observe(self, maze: np.ndarray) -> np.ndarray:
-        # [[0, 1, 2],
-        #  [3, 4, 5],
-        #  [6, 7, 8]]
-
-        # todo - log observation
+    def observe(self, maze: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        # [[0, 1, 2],       [[(0, 0), (0, 1), (0, 2)],
+        #  [3, x, 5],   =    [(1, 0), (1, 1), (1, 2)],
+        #  [6, 7, 8]]        [(2, 0), (2, 1), (2, 2)]]
 
         row, col = self.position
         new_maze, observation = rm.get_local_maze_information(maze, row, col)
-        # return maze[row - 1: (row + 1) + 1, col - 1: (col + 1) + 1]
         return new_maze, observation
 
     def invalidate_walls(self, q_values: np.ndarray, walls: np.ndarray, fires: np.ndarray) -> np.ndarray:
@@ -180,39 +171,53 @@ class Agent:
         return q_values
 
     def step(self,
-             walls: np.ndarray,  # local observation of walls
-             fires: np.ndarray,  # local observation of fires
+             walls: np.ndarray,    # local observation of walls
+             fires: np.ndarray,    # local observation of fires
              train: bool = False,  # enable training (updating Q-table)
 
              # hyper-parameters:
-             exploration_epsilon: float = 0.,
-             learning_rate: float = 0.1,
-             discount_factor: float = 0.9,
+             exploration_epsilon: float = 0.,  # random exploration likelihood
+             learning_rate: float = 0.1,       # learning rate (alpha)
+             discount_factor: float = 0.9,     # discount rate (gamma)
 
              # reverse hyper-parameters:
-             reverse_learning_rate: float = 0.1,
-             reverse_discount_factor: float = 0.9
-             ) -> bool:  # random exploration probability
+             reverse_learning_rate: float = 0.1,   # reverse learning rate (alpha_r)
+             reverse_discount_factor: float = 0.9  # reverse discount rate (gamma_r)
+             ) -> bool:
+
+        # ------------------
+        # INITIALIZE REWARDS
+        # ------------------
 
         reward = self.rewards['step_taken']  # initialize reward
 
-        # decompose positions into row, col
-        # prev_row, prev_col = self.previous_position  # previous position
+        # decompose position into row, col
         current_row, current_col = self.position  # current position
 
-        # -----------------------
-        # check if maze completed
-        if self.is_finished():
-            # todo
-            self.history['is_finished'][self.step_count] = True
-            return True
+        # --------------------
+        # CHECK TERMINAL STATE
+        # --------------------
 
-        # select Q(s) vector:
+        if self.is_finished():
+            self.history['is_finished'][self.step_count] = True
+            return True  # TERMINATE
+
+        # ---------------
+        # SELECT Q-VALUES
+        # ---------------
+
+        # select Q(s) vector of action-values:
         q_values = self.Q[current_row, current_col, :]
 
-        # consider only VALID ACTIONS:
+        # ---------------------------
+        # CONSIDER ONLY VALID ACTIONS
+        # ---------------------------
+
         q_values = self.invalidate_walls(q_values, walls, fires)
-        # todo - temporarily invalidate fires somehow
+
+        # ---------------------------
+        # CONSIDER ONLY VALID ACTIONS
+        # ---------------------------
 
         is_random_choice = False
         if np.random.random() < self.exploration_epsilon:  # random exploration
@@ -222,14 +227,16 @@ class Agent:
                 if q_values[chosen_q_index] != -np.inf:
                     break
         else:
-            max_q_indeces = np.argwhere(q_values == np.amax(q_values))
-            max_q_indeces = [e[0] for e in max_q_indeces]
-            chosen_q_index = np.random.choice(max_q_indeces)  # select index of highest q-value
-            # chosen_q_index = np.argmax(q_values)
+            max_q_indeces = np.argwhere(q_values == np.amax(q_values))  # all indeces corresponding to maximum Q-value
+            max_q_indeces = [e[0] for e in max_q_indeces]  # unpack list of single-element lists into list of elements
+            chosen_q_index = np.random.choice(max_q_indeces)  # select random index from
 
         chosen_direction = Direction(chosen_q_index)  # choose corresponding direction
-        reverse_chosen_direction = get_reverse_direction(chosen_direction)
-        chosen_q = q_values[chosen_direction]  # chosen q value
+        reverse_chosen_direction = get_reverse_direction(chosen_direction)  # reverse of chosen direction
+
+        # ------------------------
+        # MOVE IN CHOSEN DIRECTION
+        # ------------------------
 
         next_row, next_col = current_row, current_col
         if chosen_direction == Direction.NONE:  # no change in position
@@ -255,6 +262,10 @@ class Agent:
         else:
             raise ValueError('Directionality value not valid.')
 
+        # ----------------
+        # BLOCKED BY WALLS
+        # ----------------
+
         # prevent walking through walls:
         if is_wall(next_cell):  # penalize wall hit
             self.wall_hit_count += 1
@@ -264,9 +275,17 @@ class Agent:
 
         # reward function:
         if ENABLE_FIRES and is_fire(next_fire):  # penalize fire hit
+            # -------------
+            # WAIT AT FIRES
+            # -------------
+
             next_row, next_col = current_row, current_col  # revert position
+
             # todo - implement better fire policy
         else:
+            # -------------
+            # APPLY REWARDS
+            # -------------
 
             if (np.array([next_row, next_col]) == self.end_position).all():
                 reward = self.rewards['finish']
@@ -289,6 +308,7 @@ class Agent:
             # -------------
             # TRAIN Q-TABLE
             # -------------
+
             if train:  # update q-table
                 max_q = self.Q[next_row, next_col, :].max()  # todo - what to do if finished?
                 current_q_value = self.Q[current_row, current_col, chosen_q_index]
@@ -305,9 +325,9 @@ class Agent:
                 new_reverse_q_value = reverse_q_value + reverse_learning_rate * (reverse_reward + reverse_discount_factor * reverse_max_q - reverse_q_value)
                 self.Q[next_row, next_col, reverse_chosen_direction] = new_reverse_q_value
 
-        # ---------------
-        #   LOG HISTORY
-        # ---------------
+        # --------------
+        # UPDATE HISTORY
+        # --------------
 
         # action
         self.history['action'][self.step_count] = chosen_direction
@@ -324,9 +344,6 @@ class Agent:
         # ---------------
         # UPDATE POSITION
         # ---------------
-
-        # self.previous_position = np.copy(self.position)  # update memory of previous position
-        # self.previous_q_index = chosen_q_index
 
         self.position = np.array([next_row, next_col])  # update position
 
@@ -364,7 +381,6 @@ class Agent:
             is_finished = self.step(walls=walls, fires=fires, train=train)  # update position
 
             self.history['is_finished'][step] = is_finished
-            # run_path[step + 1, :] = np.copy(self.position)  # store new position
 
             if is_finished:  # achieved goal?
                 # todo - add final position (with N/A for other values)
@@ -391,32 +407,3 @@ class Agent:
         final_maze = self.run(maze, train=True, max_steps=max_steps)
 
         return final_maze
-
-    # def train(self,
-    #           maze: np.ndarray,
-    #           max_steps: int = 1_000_000
-    #           ) -> np.ndarray:
-    #
-    #     self.reset_position()  # initialize agent
-    #
-    #     # initialize training path:
-    #     train_path = np.empty(shape=(max_steps + 1, 2), dtype=int)  # empty path
-    #     train_path[0, :] = np.copy(self.position)  # add initial position
-    #
-    #     for i in range(max_steps):
-    #         observation = self.observe(maze)  # get surrounding information
-    #         walls = observation
-    #         fires = []
-    #         # walls, fires = observation[:, :, 0], observation[:, :, 1]
-    #
-    #         is_finished = self.step(walls=walls, fires=fires, train=True)  # update position
-    #         train_path[i + 1, :] = np.copy(self.position)  # store new position
-    #
-    #         if is_finished:  # achieved goal?
-    #             train_path = train_path[:i + 2, :]  # truncate if path unfilled before returning
-    #             print('finished training in {} steps!'.format(self.step_count))
-    #             break  # end training
-    #
-    #     print('training loop broken after {} steps.'.format(self.step_count))
-    #
-    #     return train_path  # return path when finished
