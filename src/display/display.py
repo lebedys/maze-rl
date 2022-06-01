@@ -14,6 +14,13 @@ def plot_results(num_epochs: int, num_eval_epochs: int,
 
     mean_eval_steps = eval_steps.mean(axis=1)
     print('mean eval steps: {}'.format(mean_eval_steps))
+    print('max at last epoch: {}'.format(eval_steps[-1, :].max()))
+    print('min at last epoch: {}'.format(eval_steps[-1, :].min()))
+    print('max ever eval: {} after training epoch {}'.format(eval_steps.max(), eval_steps[-1, :].argmax()))
+    print('min ever eval: {} after training epoch {}'.format(eval_steps.min(), eval_steps[-1, :].argmin()))
+
+    print('eval steps: ', eval_steps)
+    print('train steps: ', train_steps)
 
     training_epochs = list(range(num_epochs))
     eval_epochs = list(range(num_eval_epochs))
