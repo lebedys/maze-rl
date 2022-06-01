@@ -35,7 +35,7 @@ def eval_agent(agent: Agent,
         eval_mazes.append(eval_maze.copy())
 
         if log_eval:
-            log_agent(agent, epoch=epoch, log_file_name=log_file)  # log full epoch history
+            log_agent(agent, epoch=epoch, log_file_name='{root}_{epoch}'.format(root=log_file, epoch=epoch))  # log full epoch history
 
         if plot:
             dp.plot_eval(agent=agent, epoch=epoch, maze=eval_maze)
