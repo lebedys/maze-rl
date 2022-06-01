@@ -66,8 +66,6 @@ def hyper_params_to_str(agent: Agent) -> str:
 def history_to_str(agent: Agent) -> str:
     history_str = ''
 
-    # todo - loop through path, observations, actions and append to
-
     for step in range(agent.step_count):
         row, col = agent.history['position'][step]
         observation_str = observation_to_str(agent.history['observation'][step])
@@ -75,7 +73,7 @@ def history_to_str(agent: Agent) -> str:
 
         try:
             action = agent.history['action'][step].name
-        except BaseException:
+        except BaseException:  # in case not within Enum range
             action = agent.history['action'][step]
 
         is_random_choice = agent.history['is_random_choice'][step]

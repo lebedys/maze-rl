@@ -18,7 +18,8 @@ if ENABLE_WARNING_AS_ERROR:
 #    LOGGING
 # ------------------
 
-ENABLE_LOGGING = True  # log agent to file
+ENABLE_LOGGING = False  # log agent to file
+LOG_FILE = 'final.log'  # set to None for unique file names
 
 # ------------------
 # DISPLAY / PLOTTING
@@ -39,7 +40,7 @@ EVAL_POSITION_HISTORY_COLOR = 'blue'
 #  WORLD PARAMETERS
 # ------------------
 
-MAZE_PATH = './mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze
+MAZE_PATH = './mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze # TODO -RENAME
 
 ENABLE_FIRES = True  # enable dynamic fires
 
@@ -57,10 +58,13 @@ N_ACTIONS = 5
 PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
 # todo - make absolute out of above
 
-USE_OPTIMAL_POLICY = False  # use optimal training policy
+USE_OPTIMAL_POLICY = True  # use optimal training policy - (leave this True)
 
 TRAIN_MAX_STEPS = 500_000
 EVAL_MAX_STEPS = 100_000
+
+NUM_EPOCHS = 10
+NUM_EVAL_EPOCHS = 10
 
 REWARDS = {  # agent rewards
 

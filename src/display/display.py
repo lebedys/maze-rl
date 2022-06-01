@@ -1,12 +1,36 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
+from typing import List
 
 from src.config import PATH_COLOR, WALL_COLOR, TRAIN_POSITION_HISTORY_COLOR, EVAL_POSITION_HISTORY_COLOR
 from src.agent.agent import Agent
 
 
-def plot_training(agent: Agent, epoch: int, maze: np.ndarray):
+def plot_results(num_epochs: int, num_eval_epochs: int,
+                 train_steps: np.ndarray, eval_steps: np.ndarray) -> None:
+
+    mean_eval_steps = eval_steps.mean(axis=0)  # todo - check
+
+    fig, ax = plt.subplots()
+
+    # todo - plot training vs epoch
+    # todo - plot mean eval
+    # TODO SHOW SEED
+
+    plt.show()
+
+    fig, ax = plt.subplots()
+
+
+    for epoch in num_eval_epochs:
+
+        pass  # todo - plot all eval results on one
+
+    plt.show()
+
+
+def plot_training(agent: Agent, epoch: int, maze: np.ndarray) -> None:
     # if ax is None:
     #     ax = plt.gca()  # get current axis
 
@@ -26,7 +50,7 @@ def plot_training(agent: Agent, epoch: int, maze: np.ndarray):
     plt.show()
 
 
-def plot_eval(agent: Agent, epoch: int, maze: np.ndarray):
+def plot_eval(agent: Agent, epoch: int, maze: np.ndarray) -> None:
     maze_walls = maze[:, :, 0]
     maze_shape = maze_walls.shape
 
@@ -66,7 +90,7 @@ def plot_maze_walls(walls, show_values=False, ax=None, cmap=None) -> None:
                     bbox=dict(boxstyle='round', edgecolor='none', facecolor=wall_color))
 
 
-def plot_agent(position, ax=None):
+def plot_agent(position, ax=None) -> None:
     if ax is None:
         ax = plt.gca()  # get current axis
 
@@ -79,7 +103,7 @@ def plot_agent(position, ax=None):
     # todo - add t label option
 
 
-def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None):
+def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None) -> None:
     if ax is None:
         ax = plt.gca()  # get current axis
 
@@ -101,7 +125,7 @@ def plot_agent_path(path: np.ndarray, shape: np.ndarray, ax=None, cmap=None):
     ax.matshow(path_mat, cmap=cmap)
 
 
-def plot_fires(agent_position: tuple, agent_observation, ax=None):
+def plot_fires(agent_position: tuple, agent_observation, ax=None) -> None:
     if ax is None:
         ax = plt.gca()  # get current axis
 

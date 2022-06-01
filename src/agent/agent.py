@@ -364,7 +364,17 @@ class Agent:
     def run(self,
             maze: np.ndarray,
             train: bool = True,  # enable training
-            max_steps: int = 100_000):  # run agent
+            max_steps: int = 100_000,
+
+            # hyper-parameters:
+            exploration_epsilon: float = 0.,  # random exploration likelihood
+            learning_rate: float = 0.1,  # learning rate (alpha)
+            discount_factor: float = 0.9,  # discount rate (gamma)
+
+            # reverse hyper-parameters:
+            reverse_learning_rate: float = 0.1,  # reverse learning rate (alpha_r)
+            reverse_discount_factor: float = 0.9  # reverse discount rate (gamma_r)
+            ):  # run agent
 
         self.reset_position()  # initialize position
         self.reset_history(max_steps=max_steps)  # initialize history
@@ -378,7 +388,13 @@ class Agent:
 
             self.history['observation'][step, :, :, :] = observation  # store current observation
 
-            is_finished = self.step(walls=walls, fires=fires, train=train)  # update position
+            is_finished = self.step(walls=walls, fires=fires, train=train,
+                                    exploration_epsilon=exploration_epsilon,
+                                    learning_rate=learning_rate,
+                                    discount_factor=discount_factor,
+                                    reverse_learning_rate=reverse_learning_rate,
+                                    reverse_discount_factor=reverse_discount_factor
+                                    )  # update position
 
             self.history['is_finished'][step] = is_finished
 
@@ -402,8 +418,21 @@ class Agent:
 
     def train(self, maze: np.ndarray,
               max_steps: int = 1_000_000,  # maximum training steps per epoch
+              # hyper-parameters:
+              exploration_epsilon: float = 0.,  # random exploration likelihood
+              learning_rate: float = 0.1,  # learning rate (alpha)
+              discount_factor: float = 0.9,  # discount rate (gamma)
+
+              # reverse hyper-parameters:
+              reverse_learning_rate: float = 0.1,  # reverse learning rate (alpha_r)
+              reverse_discount_factor: float = 0.9  # reverse discount rate (gamma_r)
               ):
 
-        final_maze = self.run(maze, train=True, max_steps=max_steps)
+        final_maze = self.run(maze, train=True, max_steps=max_steps,
+                              exploration_epsilon=exploration_epsilon,
+                              learning_rate=learning_rate,
+                              discount_factor=discount_factor,
+                              reverse_learning_rate=reverse_learning_rate,
+                              reverse_discount_factor=reverse_discount_factor)
 
         return final_maze
