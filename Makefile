@@ -6,12 +6,12 @@ LOG_DIR ?= ${TOP_DIR}/logs
 
 eval:
 	@echo "Running Pre-Trained Agent"
-	cd ${SRC_DIR}; python eval.py
+	python -m src.eval
 	@echo "Finished."
 
 train:
 	@echo "Training Agent"
-	cd ${SRC_DIR}; python train.py
+	python -m src.train
 	@echo "Finished."
 
 # --- CLEAN ---

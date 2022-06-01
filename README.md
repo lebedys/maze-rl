@@ -18,6 +18,15 @@ This will complete one epoch of training.
 python -m src.train  # run pretrained version
  ```
 
+Alternatively, you can also run
+```
+make eval
+```
+or
+```
+make train
+```
+to execute the same functions.
 
 Training make take a few minutes.
 
