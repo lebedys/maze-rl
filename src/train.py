@@ -32,7 +32,7 @@ def train_optimal(agent: Agent,
                   num_eval_epochs: int = NUM_EVAL_EPOCHS,  # evaluation epoch number
                   plot: bool = ENABLE_PATH_PLOTTING,  # plot path
                   log_train: bool = True,  # log history
-                  log_eval: bool = True
+                  log_eval: bool = True,
                   ):
     print('Starting Training Using Optimal Policy')
 
@@ -51,7 +51,7 @@ def train_optimal(agent: Agent,
         train_step_counts[epoch] = agent.step_count
 
         if log_train:
-            log_agent(agent, epoch=epoch, log_file_name='optimal_epoch{}'.format(epoch))  # log full epoch history
+            log_agent(agent, epoch=epoch, log_file_name='train_optimal_epoch{}'.format(epoch))  # log full epoch history
 
         print('--- exited training epoch={}.'.format(epoch))
 
@@ -66,6 +66,7 @@ def train_optimal(agent: Agent,
             step_counts, eval_mazes = eval_agent(agent=agent,
                                                  max_eval_steps=max_eval_steps,
                                                  log_eval=log_eval,
+                                                 log_file='eval_optimal_epoch{}'.format(epoch),
                                                  plot=plot,
                                                  num_epochs=num_eval_epochs)
 

@@ -18,14 +18,14 @@ if ENABLE_WARNING_AS_ERROR:
 #    LOGGING
 # ------------------
 
-ENABLE_LOGGING = False  # log agent to file
+ENABLE_LOGGING = True  # log agent to file
 LOG_FILE = 'final.log'  # set to None for unique file names
 
 # ------------------
 # DISPLAY / PLOTTING
 # ------------------
 
-ENABLE_PATH_PLOTTING = False  # plot agent path
+ENABLE_PATH_PLOTTING = True  # plot agent path
 ENABLE_RESULTS_PLOTTING = True  # plot performance results
 
 # WORLD COLORS:
@@ -60,8 +60,8 @@ N_ACTIONS = 5
 #  AGENT
 # ------------------
 
-PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
-# todo - make absolute out of above
+# PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
+# todo - allow importing pretrained agent
 
 USE_OPTIMAL_POLICY = True  # use optimal training policy - (leave this True)
 
