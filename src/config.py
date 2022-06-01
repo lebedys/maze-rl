@@ -25,7 +25,7 @@ LOG_FILE = 'final.log'  # set to None for unique file names
 # DISPLAY / PLOTTING
 # ------------------
 
-ENABLE_PATH_PLOTTING = True  # plot agent path
+ENABLE_PATH_PLOTTING = True  # plot agent path in maze
 ENABLE_RESULTS_PLOTTING = True  # plot performance results
 
 # WORLD COLORS:
@@ -61,8 +61,7 @@ N_ACTIONS = 5
 #  AGENT
 # ------------------
 
-PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
-# todo - allow importing pretrained agent
+PRETRAINED_Q_PATH = '../data/pretrained_agent.npy'
 
 USE_OPTIMAL_POLICY = True  # use optimal training policy - (leave this True)
 
