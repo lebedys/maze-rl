@@ -1,53 +1,83 @@
 import numpy as np
-np.seterr(all='raise')  # uncomment to catch RuntimWarning as error
 
-ENABLE_LOGGING = True  # log agent to file
-ENABLE_PLOTTING = True  # plot agent path
-ENABLE_FIRES = False  # enable dynamic fires
-
-PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
+# ------------------
+#   RANDOM SEED
+# ------------------
 
 RANDOM_SEED: int = 2022
 
-MAZE_PATH = './mazes/final.npy'
-ENABLE_FAST_READ_MAZE = True  # enable faster implementation of read_maze algorithm
+# ------------------
+#   ERROR HANDLING
+# ------------------
 
-TRAIN_MAX_STEPS = 1_000_000
+ENABLE_WARNING_AS_ERROR = False  # catch RuntimeWarning as error
+if ENABLE_WARNING_AS_ERROR:
+    np.seterr(all='raise')
+
+# ------------------
+#    LOGGING
+# ------------------
+
+ENABLE_LOGGING = True  # log agent to file
+
+# ------------------
+# DISPLAY / PLOTTING
+# ------------------
+
+ENABLE_PLOTTING = True  # plot agent path
+
+# WORLD COLORS:
+WALL_COLOR = '#eeeeee'
+PATH_COLOR = '#111111'
+FIRE_COLOR = 'red'
+
+# AGENT COLORS:
+TRAIN_POSITION_HISTORY_COLOR = 'orange'
+EVAL_POSITION_HISTORY_COLOR = 'blue'
+
+# ------------------
+#  WORLD PARAMETERS
+# ------------------
+
+MAZE_PATH = './mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze
+
+ENABLE_FIRES = True  # enable dynamic fires
+
+ENABLE_FAST_READ_MAZE = True  # enable faster implementation of read_maze algorithm
 
 # world parameters:
 HEIGHT = 201
 WIDTH = 201
 N_ACTIONS = 5
 
-# default agent rewards:
-REWARDS = {
-    'finish': 10.,  # finish maze (win condition)
+# ------------------
+#  AGENT
+# ------------------
 
-    # todo - penalize reaching max step_count
+PRETRAINED_Q_PATH = '../data/agents/q_pretrained.npy'
+
+TRAIN_MAX_STEPS = 500_000
+EVAL_MAX_STEPS = 100_000
+
+REWARDS = {  # agent rewards
+
+    # WIN CONDITION:
+    'finish': 10.,  # finish maze
 
     # obstacles:
-    'wall': -10.,  # hit wall
+    'wall': -np.inf,  # hit wall
     'fire': -0.0,  # hit fire
 
     # movement:
     'step_taken': -0.,  # take step in any direction
-    'stay': -0.,  # stay in place
+    'stay': -0.,  # penalty for staying in place
 
     # backtracking:
-    'repeat_step': -0.5,  # reverse last action # todo - needs better name
+    'repeat_step': -0.5,  # backtracking penalty
     'revisited': -0.0,  # revisit previously-visited node
-    'unvisited': 0.,  # todo - reward unvisited
+    'unvisited': 0.,  # visit unvisited node
 
-    # distance metrics:
-    'distance_to_end': -0.,
-    'distance_from_start': 0.
-    # todo - change from euclidian to manhattan distance?
+    # distance:
+    'distance_to_end': -0.,  # penalize distance to end position
+    'distance_from_start': 0.  # reward distance from initial position
 }
-
-# DISPLAY PARAMETRS:
-WALL_COLOR = '#eeeeee'
-PATH_COLOR = '#111111'
-FIRE_COLOR = 'red'
-# AGENT history:
-TRAIN_POSITION_HISTORY_COLOR = 'orange'
-EVAL_POSITION_HISTORY_COLOR = 'blue'
