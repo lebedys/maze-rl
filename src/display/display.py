@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
-from typing import List
 
 from src.config import RANDOM_SEED
 
@@ -13,7 +12,7 @@ from src.agent.agent import Agent
 def plot_results(num_epochs: int, num_eval_epochs: int,
                  train_steps: np.ndarray, eval_steps: np.ndarray) -> None:
 
-    mean_eval_steps = eval_steps.mean(axis=1)  # todo - check
+    mean_eval_steps = eval_steps.mean(axis=1)
     print('mean eval steps: {}'.format(mean_eval_steps))
 
     training_epochs = list(range(num_epochs))
