@@ -2,3 +2,7 @@ __pycache__/
 .idea/
 
 log/
+
+.vscode/
+.python-version
+venv/
