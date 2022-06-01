@@ -45,7 +45,7 @@ MEAN_EVAL_PERFORMANCE_COLOR = EVAL_POSITION_HISTORY_COLOR
 #  WORLD PARAMETERS
 # ------------------
 
-MAZE_PATH = './mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze # TODO -RENAME
+MAZE_PATH = 'src/mazes/final.npy'  # './mazes/final.npy' is the provided assignment maze # TODO -RENAME
 
 
 ENABLE_FIRES = True  # enable dynamic fires
@@ -61,7 +61,7 @@ N_ACTIONS = 5
 #  AGENT
 # ------------------
 
-PRETRAINED_Q_PATH = '../data/pretrained_agent.npy'
+PRETRAINED_Q_PATH = 'data/pretrained_agent.npy'
 
 USE_OPTIMAL_POLICY = True  # use optimal training policy - (leave this True)
 

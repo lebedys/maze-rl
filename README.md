@@ -7,16 +7,16 @@ maze challenge for COMP6247 Reinforcement & Online Learning.
 
 The configuration file (`config.py`) contains self-explanatory variables for configuring the program.
 
-Run the following to execute the pretrained agent on a maze.
+Run the following (from this directory) to execute the pretrained agent on a maze.
 ```bash
-python eval.py # run pre-trained evaluation
+python -m src.eval  # run pretrained version
 ```
 
-To train the agent, run the following.
+To train the agent, run the following (from this directory).
 This will complete one epoch of training. 
 ```bash
-python train.py # run training
-```
+python -m src.train  # run pretrained version
+ ```
 
 
 Training make take a few minutes.

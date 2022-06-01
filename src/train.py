@@ -21,7 +21,7 @@ else:
 from config import RANDOM_SEED
 
 # sample mazes:
-walls_201 = rm.load_maze('./mazes/final.npy')[:, :, 0]
+walls_201 = rm.load_maze(MAZE_PATH)[:, :, 0]
 walls_9 = src.mazes.sample_mazes.sample_maze_9_A  # 9x9 test maze
 walls_11 = src.mazes.sample_mazes.sample_maze_11_A
 
